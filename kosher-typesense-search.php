@@ -1086,6 +1086,26 @@ function kosher_typesense_sanitize_scalar($value, $max_length = 500)
   return substr($value, 0, $max_length);
 }
 
+/**
+ * Sanitize a Typesense filter expression without corrupting comparison operators.
+ *
+ * sanitize_text_field() applies HTML-oriented less-than handling, which changes
+ * expressions such as "cook_time:<60". JSON decoding has already removed any
+ * transport escaping, so only invalid UTF-8 and control characters need to be
+ * removed here.
+ */
+function kosher_typesense_sanitize_filter_by($value, $max_length = 2000)
+{
+  $value = wp_check_invalid_utf8((string) $value);
+  $value = preg_replace('/[\x00-\x1F\x7F]/u', '', $value);
+
+  if (!is_string($value)) {
+    return '';
+  }
+
+  return substr($value, 0, $max_length);
+}
+
 function kosher_typesense_allowed_collections()
 {
   return array(
@@ -1241,7 +1261,9 @@ function kosher_typesense_sanitize_search_request($search)
         break;
 
       default:
-        $clean[$key] = kosher_typesense_sanitize_scalar($search[$key], $key === 'filter_by' ? 2000 : 500);
+        $clean[$key] = $key === 'filter_by'
+          ? kosher_typesense_sanitize_filter_by($search[$key], 2000)
+          : kosher_typesense_sanitize_scalar($search[$key], 500);
         break;
     }
   }
@@ -1396,7 +1418,7 @@ function kosher_typesense_search() {
 
     // Version the cache so responses produced under the previous scoped key
     // (including empty later pages) are not reused.
-    $cache_key = 'kosher_ts_v2_' . md5(wp_json_encode($payload));
+    $cache_key = 'kosher_ts_v3_' . md5(wp_json_encode($payload));
     $cache_ttl = (int) apply_filters('kosher_typesense_search_cache_ttl', 60, $payload);
     $cached = $cache_ttl > 0 ? get_transient($cache_key) : false;
 
