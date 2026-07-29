@@ -121,7 +121,7 @@ $kayco_simple_filter_groups = array(
         'mode' => 'cook_time',
         'options' => array(
             __('Less than 30 minutes', 'kosher-typesense-search') => '<30',
-            __('Less than 60 minutes', 'kosher-typesense-search') => '<60',
+            __('Less than 1 hour', 'kosher-typesense-search') => '<60',
             __('Less than 2 hours', 'kosher-typesense-search') => '<120',
             __('More than 2 hours', 'kosher-typesense-search') => '>120',
         ),

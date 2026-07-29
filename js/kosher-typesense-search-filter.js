@@ -1583,30 +1583,37 @@ if (searchInput) {
 
 
 
+function applySorting(value) {
+  const normalizedValue = value && value !== 'default' ? value : '';
+
+  customSorting = normalizedValue;
+
+  if (sortDropdown) {
+    sortDropdown.value = normalizedValue || 'default';
+  }
+
+  sidebarSortRadios.forEach((radio) => {
+    radio.checked = radio.value === (normalizedValue || 'default');
+  });
+
+  updateUrlSort(mapSortToUrl(normalizedValue));
+  resetPaginationState();
+  executeSearch(1, 1, 1, 1);
+}
+
 if (sortDropdown) {
   sortDropdown.addEventListener('change', function () {
-
-    const value = this.value;
-
-    customSorting = value === 'default' ? '' : value;
-    sidebarSortRadios.forEach((radio) => {
-      radio.checked = radio.value === value;
-    });
-
-    updateUrlSort(mapSortToUrl(value));
-
-    executeSearch();
+    applySorting(this.value);
   });
 }
 
 sidebarSortRadios.forEach((radio) => {
   radio.addEventListener('change', function () {
-    if (!this.checked || !sortDropdown) {
+    if (!this.checked) {
       return;
     }
 
-    sortDropdown.value = this.value;
-    sortDropdown.dispatchEvent(new Event('change', { bubbles: true }));
+    applySorting(this.value);
   });
 });
 

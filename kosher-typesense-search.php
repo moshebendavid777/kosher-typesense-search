@@ -1370,7 +1370,16 @@ function kosher_typesense_search() {
         wp_send_json(array('error' => 'Invalid request token.'), 403);
     }
 
-    $api_key = kosher_typesense_search_api_key();
+    // Scoped browser/search keys can embed a low `limit_hits` value (commonly
+    // 200). That makes `found` report the full total while pages crossing the
+    // embedded ceiling return no hits. This request is already server-side,
+    // nonce-protected, read-only, and strictly sanitized, so use the private
+    // server key when available to keep pagination aligned with `found`.
+    $api_key = kosher_typesense_admin_api_key();
+
+    if ($api_key === '') {
+        $api_key = kosher_typesense_search_api_key();
+    }
 
     if ($api_key === '') {
         wp_send_json(array('error' => 'Typesense search key is not configured.'), 500);
@@ -1385,7 +1394,9 @@ function kosher_typesense_search() {
     $is_suggestion_request = isset($_SERVER['HTTP_X_KOSHER_TYPESENSE_SUGGESTIONS'])
       && '1' === sanitize_text_field(wp_unslash($_SERVER['HTTP_X_KOSHER_TYPESENSE_SUGGESTIONS']));
 
-    $cache_key = 'kosher_ts_' . md5(wp_json_encode($payload));
+    // Version the cache so responses produced under the previous scoped key
+    // (including empty later pages) are not reused.
+    $cache_key = 'kosher_ts_v2_' . md5(wp_json_encode($payload));
     $cache_ttl = (int) apply_filters('kosher_typesense_search_cache_ttl', 60, $payload);
     $cached = $cache_ttl > 0 ? get_transient($cache_key) : false;
 

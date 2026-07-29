@@ -222,6 +222,18 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
 
+        if (event.target.checked && event.target.dataset.filterMode === 'cook_time') {
+          const group = event.target.closest('[data-simple-filter-group]');
+
+          if (group) {
+            group.querySelectorAll('input[type="checkbox"][data-filter-mode="cook_time"]').forEach((checkbox) => {
+              if (checkbox !== event.target) {
+                checkbox.checked = false;
+              }
+            });
+          }
+        }
+
         updateSimpleFilterPills();
         refreshSimpleSearch();
       });

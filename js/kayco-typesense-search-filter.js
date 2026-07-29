@@ -1034,16 +1034,23 @@ if (searchInput) {
 
 
 
+function applySorting(value) {
+  const normalizedValue = value && value !== 'default' ? value : '';
+
+  customSorting = normalizedValue;
+
+  if (sortDropdown) {
+    sortDropdown.value = normalizedValue || 'default';
+  }
+
+  updateUrlSort(mapSortToUrl(normalizedValue));
+  resetPaginationState();
+  executeSearch(1, 1, 1, 1);
+}
+
 if (sortDropdown) {
   sortDropdown.addEventListener('change', function () {
-
-    const value = this.value;
-
-    customSorting = value === 'default' ? '' : value;
-
-    updateUrlSort(mapSortToUrl(value));
-
-    executeSearch();
+    applySorting(this.value);
   });
 }
 
