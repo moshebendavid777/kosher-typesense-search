@@ -1,0 +1,156 @@
+.kosher-analytics-admin {
+  background: #f7f8fa;
+  color: #17202a;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin-left: -20px;
+  min-height: calc(100vh - 32px);
+  padding: 28px;
+}
+
+.kosher-analytics-admin__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.kosher-analytics-admin__eyebrow {
+  color: #7a147a;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  margin: 0 0 6px;
+  text-transform: uppercase;
+}
+
+.kosher-analytics-admin h1 {
+  color: #17202a;
+  font-size: 34px;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.kosher-analytics-admin h2 {
+  color: #17202a;
+  font-size: 18px;
+  margin: 0 0 18px;
+}
+
+.kosher-analytics-admin__export,
+.kosher-analytics-admin__filters .button {
+  background: #7a147a;
+  border: 1px solid #7a147a;
+  border-radius: 8px;
+  color: #fff;
+  display: inline-flex;
+  font-weight: 700;
+  min-height: 38px;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+.kosher-analytics-admin__export:hover {
+  background: #fff;
+  color: #7a147a;
+}
+
+.kosher-analytics-admin__filters {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e6e8ec;
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+  padding: 14px;
+}
+
+.kosher-analytics-admin__filters input,
+.kosher-analytics-admin__filters select {
+  border: 1px solid #d4d8de;
+  border-radius: 8px;
+  min-height: 38px;
+}
+
+.kosher-analytics-admin__cards {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 22px;
+}
+
+.kosher-analytics-admin__cards article,
+.kosher-analytics-admin__panel {
+  background: #fff;
+  border: 1px solid #e6e8ec;
+  border-radius: 8px;
+  box-shadow: 0 12px 28px rgba(23, 32, 42, .05);
+}
+
+.kosher-analytics-admin__cards article {
+  padding: 20px;
+}
+
+.kosher-analytics-admin__cards span {
+  color: #667085;
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.kosher-analytics-admin__cards strong {
+  color: #17202a;
+  display: block;
+  font-size: 36px;
+  line-height: 1;
+}
+
+.kosher-analytics-admin__grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.kosher-analytics-admin__panel {
+  padding: 20px;
+}
+
+.kosher-analytics-admin canvas {
+  width: 100%;
+}
+
+.kosher-analytics-admin table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.kosher-analytics-admin th,
+.kosher-analytics-admin td {
+  border-bottom: 1px solid #eef0f3;
+  font-size: 13px;
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.kosher-analytics-admin th {
+  color: #667085;
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+@media screen and (max-width: 960px) {
+  .kosher-analytics-admin__cards,
+  .kosher-analytics-admin__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .kosher-analytics-admin__header,
+  .kosher-analytics-admin__filters {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

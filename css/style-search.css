@@ -1,0 +1,2101 @@
+/**
+ * File: style-search.css
+ * Description: Frontend search layout, filters, tabs, result cards, loading states, and responsive styles.
+ * Author: Kosher Dev Team
+ */
+
+/* Pagination Container */
+.ais-Pagination-list {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  list-style: none;
+  margin: 2rem 0;
+  padding: 0;
+}
+
+.kosher-header-search #predictionList {
+  z-index: 100000 !important;
+}
+
+.main-header {
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100000;
+}
+
+body.admin-bar .main-header {
+  top: 32px;
+}
+
+@media screen and (max-width: 782px) {
+  body.admin-bar .main-header {
+    top: 46px;
+  }
+}
+
+body:has(.kosher-search-filter-form) .kosher-header-search {
+  display: none !important;
+}
+
+
+.kosher-header-search {
+  margin: unset;
+  position: relative;
+  width: 80%;
+}
+
+.kosher-header-search .container {
+  width: 100%;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.kosher-header-search .input-group {
+  align-items: center !important;
+  position: relative;
+  width: 100%;
+}
+
+.kosher-header-search .input-group #searchInput {
+  background: #fff !important;
+  border: 1px solid #b8b8b8 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #333133 !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  height: 44px !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  padding: 0 18px 0 46px !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.kosher-header-search .input-group #searchInput::placeholder {
+  color: #706F70 !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 145% !important;
+  opacity: 1;
+}
+
+.kosher-header-search .input-group #searchInput:focus {
+  border-color: #8d8d8d !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.kosher-header-search .input-group .input-group-text {
+  align-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #333133 !important;
+  display: inline-flex !important;
+  height: auto !important;
+  justify-content: center !important;
+  left: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  pointer-events: none;
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: auto !important;
+  z-index: 7 !important;
+}
+
+.kosher-header-search .input-group .input-group-text .fa-search {
+  color: #333133 !important;
+  font-size: 17px !important;
+  line-height: 1 !important;
+}
+
+.kosher-header-search #predictionList.active {
+  border-radius: 12px;
+  margin-top: 8px !important;
+}
+
+/* Pagination Items */
+.ais-Pagination-item {
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+/* Pagination Links */
+.ais-Pagination-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
+  color: #333;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.ais-Pagination-link:hover {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Selected Page */
+.ais-Pagination-item--selected .ais-Pagination-link {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Disabled Navigation (if present) */
+.ais-Pagination-item--disabled .ais-Pagination-link {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Arrows (First, Last, Next, Previous) */
+.ais-Pagination-item--firstPage .ais-Pagination-link,
+.ais-Pagination-item--previousPage .ais-Pagination-link,
+.ais-Pagination-item--nextPage .ais-Pagination-link,
+.ais-Pagination-item--lastPage .ais-Pagination-link {
+  font-size: 1.1rem;
+  padding: 0;
+  width: 36px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .ais-Pagination-list {
+    gap: 3px;
+  }
+
+  .ais-Pagination-link {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+  }
+}
+.recipe-only {
+    display: flex;
+}
+
+
+.kosher-search .input-group .input-group-text {
+    padding: .375rem .75rem !important;
+}
+
+.kayco-typesense-simple-search .container {
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__search {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  display: flex;
+  min-height: 44px;
+  margin: unset;
+  max-width: 600px;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__search .bi-search {
+  color: #333133;
+  flex: 0 0 auto;
+  font-size: 17px;
+  left: 16px;
+  line-height: 1;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.kayco-typesense-simple-search__search .js-kayco-simple-search-input {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #fff !important;
+  border: 1px solid #b8b8b8 !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  color: #333133 !important;
+  display: block !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  height: 44px !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  min-width: 0;
+  outline: 0 !important;
+  padding: 0 18px 0 46px !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.kayco-typesense-simple-search__search .js-kayco-simple-search-input::placeholder {
+  color: #706F70 !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 145% !important;
+  opacity: 1;
+}
+
+.kayco-typesense-simple-search__status {
+  color: #706f70;
+  flex: 0 0 auto;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.kayco-typesense-simple-search__layout {
+  align-items: start;
+  display: grid;
+  gap: 32px;
+  grid-template-columns: minmax(280px, 320px) minmax(0, 1fr);
+  margin-top: 20px;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__main {
+  min-width: 0;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__sidebar {
+  align-self: stretch;
+  background: #fff;
+  border: 0;
+  border-radius: 0;
+  border-right: 1px solid #e4e4e7;
+  margin: -20px 0 0;
+  padding: 28px 24px 28px 0 !important;
+  position: sticky;
+  top: 112px;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin: 0 0 16px;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__controls,
+.kayco-typesense-simple-search__filters {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  margin: 0;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__filters {
+  flex-direction: column;
+  gap: 0;
+}
+
+.kayco-typesense-simple-search__filter-header {
+  align-items: center !important;
+  border-bottom: 1px solid #d9d9d9;
+  display: flex !important;
+  gap: 14px;
+  justify-content: space-between !important;
+  margin-bottom: 0;
+  min-height: 48px;
+  padding: 0 0 16px;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__filter-title {
+  color: #101322;
+  font-family: Inter, sans-serif;
+  font-size: 14px !important;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+}
+
+.kayco-typesense-simple-search__filter-list {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__sidebar-sort {
+  border-top: 0 !important;
+  padding: 18px 0 16px !important;
+}
+
+.kayco-typesense-simple-search__sidebar-sort .kosher-search-filter-form__sidebar-sort-option {
+  font-size: 14px !important;
+}
+
+.kayco-typesense-simple-search__filter {
+  border-bottom: 1px solid #eef0f3;
+  border-top: 0;
+  padding: 0;
+  position: relative;
+  width: 100%;
+}
+
+.kayco-typesense-simple-search__filter:last-child {
+  border-bottom: 1px solid #eef0f3;
+}
+
+.kayco-typesense-simple-search__filter-label {
+  align-items: center;
+  color: #101322;
+  display: inline-flex;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  gap: 6px;
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+
+.kayco-typesense-simple-search__filter-count {
+  align-items: center;
+  background: #7a147a;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-family: Inter, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  height: 18px;
+  justify-content: center;
+  line-height: 1;
+  min-width: 18px;
+  padding: 0 5px;
+  position: static;
+  z-index: 40;
+}
+
+.kayco-typesense-simple-search__filter-count[hidden] {
+  display: none !important;
+}
+
+.kosher-search-filter-form .ts-dropdown {
+  overflow: hidden !important;
+}
+
+.kosher-search-filter-form .ts-dropdown-content {
+  max-height: 252px !important;
+  overflow-y: auto !important;
+  padding: 2px !important;
+}
+
+.kosher-search-filter-dropdown-search {
+  background: #fff !important;
+  padding: 6px 6px 8px !important;
+  position: relative !important;
+}
+
+.kosher-search-filter-dropdown-search::before {
+  color: #333133 !important;
+  content: "\F52A" !important;
+  font-family: "bootstrap-icons" !important;
+  font-size: 18px !important;
+  left: 18px !important;
+  line-height: 1 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  top: 19px !important;
+}
+
+.kosher-search-filter-dropdown-search__input {
+  background: #fff !important;
+  border: 1px solid #b8b8b8 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #333133 !important;
+  display: block !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  height: 44px !important;
+  line-height: 1.2 !important;
+  margin: 0 !important;
+  outline: 0 !important;
+  padding: 0 14px 0 40px !important;
+  width: 100% !important;
+}
+
+.kosher-search-filter-dropdown-search__input::placeholder {
+  color: #706f70 !important;
+  opacity: 1 !important;
+}
+
+.kosher-search-filter-form__remote-search {
+  background: #fff !important;
+  border: 1px solid #b8b8b8 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #333133 !important;
+  display: block !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  height: 44px !important;
+  line-height: 1.2 !important;
+  margin: 8px 0 10px !important;
+  outline: 0 !important;
+  padding: 0 14px !important;
+  width: 100% !important;
+}
+
+.kosher-search-filter-form__remote-search::placeholder {
+  color: #706f70 !important;
+  opacity: 1 !important;
+}
+
+.kosher-search-filter-dropdown-clear {
+  background: transparent !important;
+  border: 0 !important;
+  color: #7a147a !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  margin: 8px 6px 0 !important;
+  padding: 0 !important;
+  text-decoration: none !important;
+}
+
+.kosher-search-filter-dropdown-clear[hidden] {
+  display: none !important;
+}
+
+.kosher-search-filter-form .ts-dropdown .option {
+  align-items: center !important;
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: flex-start !important;
+  min-height: 40px !important;
+  padding: 8px 10px !important;
+}
+
+.kosher-search-filter-form .ts-dropdown .option input[type="checkbox"] {
+  flex: 0 0 auto !important;
+  height: 18px !important;
+  margin: 0 !important;
+  order: -1 !important;
+  width: 18px !important;
+}
+
+.kayco-typesense-simple-search__results.is-skeleton {
+  display: grid !important;
+  gap: 24px !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  list-style: none !important;
+  margin: 24px 0 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+.kayco-typesense-simple-search__skeleton-card {
+  background: #fff !important;
+  border: 1px solid #eeeeef !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 10px rgba(16, 19, 34, .06) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 360px !important;
+  overflow: hidden !important;
+  width: 100% !important;
+}
+
+.kayco-typesense-simple-search__skeleton-image,
+.kayco-typesense-simple-search__skeleton-line {
+  animation: kaycoSimpleSearchSkeleton 1.15s ease-in-out infinite !important;
+  background: linear-gradient(90deg, #eef0f3 25%, #f8f8fa 50%, #eef0f3 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+.kayco-typesense-simple-search__skeleton-image {
+  aspect-ratio: 4 / 3 !important;
+  width: 100% !important;
+}
+
+.kayco-typesense-simple-search__skeleton-body {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  padding: 16px !important;
+}
+
+.kayco-typesense-simple-search__skeleton-line {
+  border-radius: 999px !important;
+  height: 12px !important;
+}
+
+.kayco-typesense-simple-search__skeleton-line--meta {
+  width: 58% !important;
+}
+
+.kayco-typesense-simple-search__skeleton-line--title {
+  height: 18px !important;
+  width: 88% !important;
+}
+
+.kayco-typesense-simple-search__skeleton-line--short {
+  width: 42% !important;
+}
+
+@keyframes kaycoSimpleSearchSkeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.kayco-typesense-simple-search__filter-toggle {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 25px;
+  color: #1e1e1e;
+  cursor: pointer;
+  display: inline-flex;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  gap: 8px;
+  line-height: 1;
+  min-height: 38px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.kayco-typesense-simple-search__filter-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.kayco-typesense-simple-search__filter-toggle .bi {
+  color: #706f70;
+  font-size: 13px;
+  transition: transform 160ms ease;
+}
+
+.kayco-typesense-simple-search__filter[open] .kayco-typesense-simple-search__filter-toggle .bi {
+  transform: rotate(180deg);
+}
+
+.kayco-typesense-simple-search__filter-menu {
+  background: #fff;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(12, 12, 13, .12);
+  left: 0;
+  min-width: 220px;
+  padding: 8px;
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 1000;
+}
+
+.kayco-typesense-simple-search__filter-option {
+  align-items: center;
+  color: #1e1e1e;
+  cursor: pointer;
+  display: flex;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  gap: 8px;
+  line-height: 1.2;
+  margin: 0;
+  padding: 8px;
+}
+
+.kayco-typesense-simple-search__filter-option:hover,
+.kayco-typesense-simple-search__filter-option:focus-within {
+  background: #f7f2f8;
+  border-radius: 6px;
+}
+
+.kayco-typesense-simple-search__filter-option input {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.kayco-typesense-simple-search__clear-filters {
+  background: transparent;
+  border: 0;
+  color: #7a147a;
+  cursor: pointer;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0;
+  text-decoration: none;
+}
+
+.kayco-typesense-simple-search [hidden] {
+  display: none !important;
+}
+
+.kayco-typesense-simple-search__clear-filters,
+.kayco-typesense-simple-search__filter-clear {
+  background: transparent !important;
+  border: 0 !important;
+  color: #7a147a !important;
+  cursor: pointer !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+.kayco-typesense-simple-search__filter-clear {
+  display: inline-flex !important;
+  margin-top: 10px !important;
+}
+
+.kayco-typesense-simple-search__filter-toggle {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #101322 !important;
+  display: grid !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  grid-template-areas:
+    "label count icon"
+    "summary summary icon" !important;
+  grid-template-columns: minmax(0, 1fr) auto auto !important;
+  min-height: 0 !important;
+  padding: 14px 0 !important;
+  position: relative !important;
+  row-gap: 8px !important;
+  width: 100% !important;
+}
+
+.kayco-typesense-simple-search__filter-toggle span:first-child {
+  grid-area: label !important;
+  text-align: left !important;
+}
+
+.kayco-typesense-simple-search__filter-count {
+  grid-area: count !important;
+  margin-left: 8px !important;
+}
+
+.kayco-typesense-simple-search__filter-toggle::after {
+  border-bottom: 2px solid #101322 !important;
+  border-right: 2px solid #101322 !important;
+  content: "" !important;
+  display: block !important;
+  grid-area: icon !important;
+  height: 9px !important;
+  justify-self: end !important;
+  margin-left: 14px !important;
+  transform: rotate(45deg) !important;
+  transition: transform 160ms ease !important;
+  width: 9px !important;
+}
+
+.kayco-typesense-simple-search__filter[open] .kayco-typesense-simple-search__filter-toggle::after {
+  transform: rotate(-135deg) !important;
+}
+
+.kayco-typesense-simple-search__filter-toggle .bi {
+  display: none !important;
+}
+
+.kayco-typesense-simple-search__filter-menu {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  left: auto !important;
+  max-height: none !important;
+  min-width: 0 !important;
+  padding: 8px 0 10px !important;
+  position: static !important;
+  top: auto !important;
+  width: 100% !important;
+  z-index: auto !important;
+}
+
+.kayco-typesense-simple-search__filter:not([open]) .kayco-typesense-simple-search__filter-menu {
+  display: none !important;
+}
+
+.kayco-typesense-simple-search__filter[open] .kayco-typesense-simple-search__filter-menu {
+  display: block !important;
+}
+
+.kayco-typesense-simple-search__filter-search {
+  background: #fff !important;
+  border: 1px solid #b8b8b8 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  color: #333133 !important;
+  display: block !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  height: 40px !important;
+  line-height: 1.2 !important;
+  margin: 0 0 8px !important;
+  outline: 0 !important;
+  padding: 0 12px !important;
+  width: 100% !important;
+}
+
+.kayco-typesense-simple-search__filter-search::placeholder {
+  color: #706f70 !important;
+  opacity: 1 !important;
+}
+
+.kayco-typesense-simple-search__filter-option {
+  align-items: center !important;
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: flex-start !important;
+  min-height: 36px !important;
+  padding: 7px 0 !important;
+}
+
+.kayco-typesense-simple-search__filter-option input {
+  accent-color: #7a147a !important;
+  height: 18px !important;
+  margin: 0 !important;
+  order: -1 !important;
+  width: 18px !important;
+}
+
+.kayco-typesense-simple-search__filter-option[hidden] {
+  display: none !important;
+}
+
+.kayco-typesense-simple-search__filter .ts-wrapper,
+.kayco-typesense-simple-search__filter .ts-control,
+.kayco-typesense-simple-search__filter .ts-dropdown,
+.kayco-typesense-simple-search__filter .ts-dropdown-content {
+  display: none !important;
+}
+
+.kayco-typesense-simple-search__filter .ts-control::before,
+.kayco-typesense-simple-search__filter .ts-control::after,
+.kayco-typesense-simple-search__filter .ts-dropdown .option::before,
+.kayco-typesense-simple-search__filter .ts-dropdown .option::after {
+  content: none !important;
+  display: none !important;
+}
+
+@media screen and (max-width: 1023px) {
+  .kayco-typesense-simple-search {
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__layout {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .kayco-typesense-simple-search__sidebar {
+    border-right: 0;
+    margin: 0;
+    padding: 20px 0 0;
+    position: static;
+  }
+
+  .kayco-typesense-simple-search__toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    margin-bottom: 12px;
+  }
+
+  .kayco-typesense-simple-search__search {
+    min-height: 44px;
+  }
+
+  .kayco-typesense-simple-search__search .js-kayco-simple-search-input {
+    display: block !important;
+    min-width: 0;
+  }
+
+  .kayco-typesense-simple-search__results {
+    display: grid !important;
+    gap: 24px;
+    grid-template-columns: 1fr;
+    list-style: none;
+    margin: 24px 0 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__results.is-skeleton {
+    grid-template-columns: 1fr !important;
+  }
+
+  .kayco-typesense-simple-search__results:empty {
+    display: none !important;
+  }
+
+  .kayco-typesense-simple-search__results .result-item {
+    background: transparent !important;
+    border: 0 !important;
+    display: block;
+    grid-column: 1 / -1;
+    max-width: none;
+    padding: 0 !important;
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: none;
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__media {
+    aspect-ratio: 4 / 3;
+    background: #f4f5f7;
+    flex: 0 0 auto;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__image-link,
+  .kayco-typesense-simple-search__results .kayco-card__image {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__image {
+    object-fit: cover;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__image--placeholder {
+    background: #eceff3;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__body {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: flex-start;
+    min-width: 0;
+    text-align: left;
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__title {
+    font-family: Spectral, Georgia, serif;
+    font-size: 20px !important;
+    font-weight: 500 !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    text-align: left;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__title a {
+    color: #1e1e1e;
+    text-decoration: none;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__title a:hover,
+  .kayco-typesense-simple-search__results .kayco-card__title a:focus {
+    color: #7a147a;
+  }
+
+  .kayco-typesense-simple-search__results .kayco-card__meta {
+    align-items: center;
+    color: #757575;
+    display: flex;
+    font-family: Inter, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    gap: 8px;
+    justify-content: flex-start;
+    line-height: 1.2;
+    order: 2;
+    text-align: left;
+    text-transform: uppercase;
+    width: 100%;
+  }
+
+  .kayco-typesense-simple-search__results .recent-searches-section,
+  .kayco-typesense-simple-search__results .recent-visited-section {
+    grid-column: 1 / -1;
+  }
+}
+
+
+.recent-searches-section h5, .recent-visited-section h5 {
+    font-size: 11px !important;
+    color: #5A5A5A !important;
+}
+
+.recent-searches-section ul .list-group-item a span, .recent-visited-section ul .list-group-item a span {
+  color: #1E1E1E !important;
+}
+
+.recent-searches-section ul .list-group-item a:hover span, .recent-visited-section ul .list-group-item a:hover span {
+  color: #7A147A !important;
+}
+
+.kosher-search-filter-form .search-filters {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.kosher-search-filter-form .plugin-checkbox_options {
+  padding-left: 0 !important;
+}
+
+.kosher-search-filter-form .search-filters__wrapper {
+  align-items: center;
+  gap: 10px;
+}
+
+@media screen and (max-width: 856px) {
+  .kosher-search-filter-form .btn-kosher--filter {
+    align-items: center;
+    display: inline-flex;
+  }
+
+  .kosher-search-filter-form .search-filters__wrapper {
+    display: flex !important;
+  }
+
+  .kosher-search-filter-form.is-header-search-mounted > .container-fluid:first-child {
+    display: block;
+  }
+
+  body:has(.kosher-search-filter-form) .header-bar__search {
+    display: block !important;
+    flex: 1 1 100%;
+    order: 99;
+    width: 100%;
+  }
+
+  body:has(.kosher-search-filter-form) .header-bar__search .kosher-search-filter-form__header-search {
+    display: block !important;
+    margin: 10px 0 0;
+    width: 100%;
+  }
+
+  body:has(.kosher-search-filter-form) .header-bar__search .kosher-search-filter-form__header-search .input-group {
+    display: flex !important;
+    max-width: none !important;
+    position: relative;
+    width: 100% !important;
+  }
+
+  body:has(.kosher-search-filter-form) .header-bar__search .kosher-search-filter-form__header-search .input-group #searchInput {
+    background: #fff !important;
+    border: 1px solid #cfd4dc !important;
+    border-radius: 8px !important;
+    color: #000 !important;
+    display: block !important;
+    font-size: 16px !important;
+    height: 44px !important;
+    padding: 0 42px 0 46px !important;
+    width: 100% !important;
+  }
+
+  body:has(.kosher-search-filter-form) .header-bar__search .kosher-search-filter-form__header-search .input-group-text {
+    display: inline-flex !important;
+  }
+}
+
+/* Modern search layout */
+.kosher-search-filter-form {
+  --kosher-accent: #7a147a;
+  --kosher-border: #e3e5e8;
+  --kosher-text: #17202a;
+  --kosher-muted: #667085;
+  background: #fff;
+  color: var(--kosher-text);
+}
+
+.kosher-search-filter-form .container-fluid {
+  max-width: 1440px;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.kosher-search-filter-form .container__wrapper {
+  align-items: center;
+  border-bottom: 1px solid var(--kosher-border);
+  display: flex;
+  justify-content: center;
+  padding-bottom: 18px !important;
+  padding-top: 12px !important;
+}
+
+.kosher-search-filter-form.is-header-search-mounted > .container-fluid:first-child {
+  display: none;
+}
+
+.header-bar__search .kosher-search-filter-form__header-search {
+  border-bottom: 0;
+  padding: 0 !important;
+  width: 100%;
+}
+
+.kosher-search-filter-form .input-group {
+  max-width: 640px;
+  width: 100%;
+}
+
+.kosher-search-filter-form .input-group #searchInput,
+.header-bar__search .kosher-search-filter-form__header-search .input-group #searchInput {
+  border-color: #cfd4dc !important;
+  border-radius: 8px !important;
+  color: #000 !important;
+  height: 44px !important;
+  padding-left: 46px !important;
+}
+
+.header-bar__search .kosher-search-filter-form__header-search .input-group {
+  max-width: 100%;
+  width: 100%;
+}
+
+.header-bar__search .kosher-search-filter-form__header-search .input-group-text {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  color: #333133;
+  display: inline-flex;
+  height: auto;
+  justify-content: center;
+  left: 16px;
+  padding: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 7;
+}
+
+.header-bar__search .kosher-search-filter-form__header-search .input-group-text.close-icon {
+  left: auto;
+  right: 16px;
+}
+
+.kosher-search-summary {
+  align-items: baseline;
+  border-bottom: 1px solid var(--kosher-border);
+  display: flex;
+  gap: 8px;
+  min-height: 52px;
+  padding: 16px 0 14px;
+}
+
+.kosher-search-summary__label {
+  color: var(--kosher-muted);
+  font-size: 14px;
+}
+
+.kosher-search-summary__query {
+  color: var(--kosher-text);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.kosher-search-filter-form__wrap .header-tabs {
+  border-bottom: 1px solid var(--kosher-border);
+}
+
+.kosher-search-filter-form__wrap .header-tabs .nav-tabs {
+  border: 0;
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 18px;
+  min-width: 0;
+  overflow: visible;
+  white-space: nowrap;
+}
+
+.kosher-search-filter-form__wrap .header-tabs .nav-tabs .nav-item {
+  flex: 0 0 auto;
+}
+
+.kosher-search-filter-form #searchTabs .nav-link {
+  align-items: center;
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  color: var(--kosher-text) !important;
+  display: inline-flex;
+  font-size: 14px !important;
+  padding: 18px 0 14px !important;
+  white-space: nowrap;
+}
+
+.kosher-search-filter-form #searchTabs .nav-link.active,
+.kosher-search-filter-form #searchTabs .nav-link:hover {
+  border-bottom-color: var(--kosher-accent) !important;
+  color: var(--kosher-text) !important;
+}
+
+.kosher-search-filter-form-result {
+  border-top: 0 !important;
+}
+
+.kosher-search-filter-form-result__filter {
+  border-right: 1px solid var(--kosher-border) !important;
+  display: flex;
+  flex: 0 0 320px;
+  opacity: 1;
+  transform: none;
+  width: 320px;
+}
+
+.kosher-search-filter-form-result__filter:not(.opened-filter) {
+  display: flex;
+}
+
+.kosher-search-filter-form-result.no-filters .kosher-search-filter-form-result__filter {
+  display: none;
+}
+
+.kosher-search-filter-form-result__filter__header {
+  align-items: center !important;
+  border-bottom: 1px solid var(--kosher-border);
+  justify-content: space-between !important;
+  min-height: 48px;
+}
+
+.kosher-search-filter-form-result__filter__header__title {
+  color: var(--kosher-text) !important;
+  font-family: Inter, sans-serif;
+  font-size: 14px !important;
+  font-weight: 700;
+  margin: 0 !important;
+}
+
+.kosher-search-filter-form-result__filter__header-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.kosher-search-filter-form-result__filter__header .clear-all {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--kosher-accent) !important;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  min-height: 0;
+  padding: 0 !important;
+}
+
+.kosher-search-filter-form-result__filter__header .clear-all:hover {
+  color: var(--kosher-accent) !important;
+  text-decoration: underline;
+}
+
+.kosher-search-filter-form-result__filter .accordion-item {
+  border-bottom-color: #eef0f3 !important;
+}
+
+.kosher-search-filter-form-result__filter .accordion-header button {
+  color: var(--kosher-muted);
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 14px 0 !important;
+}
+
+.kosher-search-filter-form-result .search-filters-nav {
+  max-width: 1040px;
+  padding-left: 32px;
+  padding-right: 32px;
+}
+
+.kosher-search-filter-form .list {
+  row-gap: 44px;
+}
+
+.kosher-search-filter-form.is-articles-tab .toggle-button-container,
+.kosher-search-filter-form.is-shows-tab .toggle-button-container,
+.kosher-search-filter-form:has(#tab-articles.active) .toggle-button-container,
+.kosher-search-filter-form:has(#tab-shows.active) .toggle-button-container {
+  display: none !important;
+}
+
+.kosher-search-filter-form .result-item,
+.kosher-search-filter-form .item-card {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: kosherResultIn 220ms ease forwards;
+}
+
+.kosher-search-filter-form .kayco-card__body {
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.kosher-search-filter-form .kayco-card__title,
+.kosher-search-filter-form .kayco-card__context,
+.kosher-search-filter-form .kayco-card__meta,
+.kosher-search-filter-form .kayco-card__rating,
+.kosher-search-filter-form .kayco-card__pills {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.kosher-search-filter-form .kayco-card__like {
+  align-items: center;
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  gap: 4px;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.kosher-search-filter-form .item-card__media {
+  min-height: 186px;
+}
+
+.kosher-search-filter-form .item-card__media__play {
+  align-items: center;
+  background: rgba(2, 18, 20, .92);
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  left: 12px;
+  position: absolute;
+  top: 12px;
+  width: 36px;
+  z-index: 3;
+}
+
+.kosher-search-filter-form .item-card__media__play .fa-play {
+  font-size: 13px;
+  margin-left: 2px;
+}
+
+.kosher-search-filter-form .item-card:hover .item-card__media img {
+  filter: none !important;
+  transform: scale(1.02);
+}
+
+.kosher-search-filter-form .item-card__media figure img {
+  transition: transform 220ms ease;
+}
+
+.kosher-search-filter-form .list-all__wrapper {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 42px 0 24px !important;
+}
+
+.kosher-search-filter-form .list-all__wrapper .query_title {
+  color: var(--kosher-text);
+  font-family: Spectral, Georgia, serif;
+  font-size: 34px !important;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.kosher-search-filter-form .list-all__load-more {
+  display: flex;
+  justify-content: center;
+  margin: 34px 0 46px;
+  width: 100%;
+}
+
+.kosher-search-filter-form .query-link {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--kosher-accent);
+  border-radius: 999px !important;
+  color: var(--kosher-accent);
+  display: inline-flex;
+  font-family: Inter, sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 54px;
+  min-width: 240px;
+  padding: 12px 34px;
+  text-decoration: none !important;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.kosher-search-filter-form .query-link:hover,
+.kosher-search-filter-form .query-link:focus {
+  background: var(--kosher-accent);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.kosher-search-filter-form .pagination .page-link {
+  border-radius: 8px !important;
+}
+
+.kosher-search-filter-form .pagination {
+  justify-content: center;
+  margin: 34px 0;
+}
+
+.kosher-result-skeleton {
+  list-style: none;
+}
+
+.kosher-result-skeleton__image,
+.kosher-result-skeleton__line {
+  animation: kosherSkeletonPulse 1.2s ease-in-out infinite;
+  background: linear-gradient(90deg, #eef0f3 25%, #f7f8fa 50%, #eef0f3 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+}
+
+.kosher-result-skeleton__image {
+  height: 186px;
+  margin-bottom: 16px;
+}
+
+.kosher-result-skeleton__line {
+  height: 13px;
+  margin-bottom: 10px;
+}
+
+.kosher-result-skeleton__line--title {
+  height: 18px;
+  width: 84%;
+}
+
+.kosher-result-skeleton__line--short {
+  width: 44%;
+}
+
+.kosher-search-filter-form.is-loading .list {
+  opacity: .72;
+}
+
+@keyframes kosherResultIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes kosherSkeletonPulse {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media screen and (max-width: 1023px) {
+  .kosher-search-filter-form .container-fluid {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .kosher-search-summary {
+    min-height: 52px;
+    padding: 16px 0 14px;
+  }
+
+  .kosher-search-filter-form-result {
+    display: block;
+  }
+
+  .kosher-search-filter-form-result__filter {
+    display: none;
+    width: 100%;
+  }
+
+  .kosher-search-filter-form-result__filter.opened-filter {
+    display: flex;
+    transform: translateX(0);
+  }
+
+  .kosher-search-filter-form-result .search-filters-nav {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* Layout */
+.page-header {
+  display: none !important;
+}
+
+.kosher-search-filter-form .search-filters--state-controls {
+  border: 0 !important;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: absolute !important;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.kosher-search-filter-form .search-layout {
+  align-items: flex-start;
+  display: flex;
+  margin: 0 auto;
+  max-width: 1440px;
+  width: 100%;
+}
+
+.kosher-search-filter-form .search-sidebar {
+  align-self: flex-start;
+  border-right: 1px solid var(--kosher-border) !important;
+  display: flex;
+  flex: 0 0 216px;
+  max-height: none;
+  min-height: auto;
+  overflow: visible;
+  padding: 0 16px 40px !important;
+  position: static !important;
+  transform: none;
+  width: 216px;
+}
+
+.kosher-search-filter-form-result.no-filters .search-sidebar {
+  display: flex;
+}
+
+.kosher-search-filter-form .search-content {
+  flex: 1 1 auto;
+  max-width: none !important;
+  min-width: 0;
+  padding: 0 28px 72px !important;
+}
+
+.kosher-search-filter-form .search-content .header-tabs {
+  margin: 0;
+}
+
+.kosher-search-filter-form .header-tabs__inner {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 20px;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.kosher-search-filter-form .header-tabs__controls {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+  margin-left: auto;
+  padding: 10px 0;
+  white-space: nowrap;
+}
+
+.kosher-search-filter-form #results {
+  margin-top: 32px !important;
+}
+
+/* Controls */
+.kosher-search-filter-form .search-controls {
+  align-items: center;
+  border-bottom: 1px solid var(--kosher-border);
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  min-height: 70px;
+  padding: 14px 0;
+}
+
+.kosher-search-filter-form .search-controls-left,
+.kosher-search-filter-form .search-controls-right {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+}
+
+.kosher-search-filter-form .search-controls-left {
+  flex: 1 1 auto;
+}
+
+.kosher-search-filter-form .section__selections {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  min-width: 0;
+  width: 100%;
+}
+
+.kosher-search-filter-form .section__selections__options,
+.kosher-search-filter-form .includes-list,
+.kosher-search-filter-form .excludes-list {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.kosher-search-filter-form .includes-list > li:first-child,
+.kosher-search-filter-form .excludes-list > li:first-child {
+  color: var(--kosher-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.kosher-search-filter-form .filter-item .remove-filter,
+.kosher-search-filter-form .clear-all {
+  align-items: center;
+  background: #f6f7f8;
+  border: 1px solid #e2e5e9;
+  border-radius: 8px;
+  color: var(--kosher-text);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 600;
+  gap: 6px;
+  padding: 6px 10px;
+}
+
+.kosher-search-filter-form .filter-item .remove-filter:hover,
+.kosher-search-filter-form .clear-all:hover {
+  border-color: var(--kosher-accent);
+  color: var(--kosher-accent);
+}
+
+.kosher-search-filter-form .search-controls-right {
+  flex: 0 0 auto;
+}
+
+.kosher-search-filter-form .btn-kosher--filter {
+  border-radius: 8px !important;
+}
+
+.kosher-search-filter-form .search-filters__sort {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.kosher-search-filter-form .search-filters__sort label {
+  color: var(--kosher-muted);
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.kosher-search-filter-form .search-filters__sort select {
+  border: 1px solid #cfd4dc;
+  border-radius: 8px;
+  color: var(--kosher-text);
+  min-height: 38px;
+  padding: 6px 34px 6px 12px;
+  width: 150px;
+}
+
+/* Sidebar */
+.kosher-search-filter-form .search-sidebar .accordion {
+  width: 100%;
+}
+
+.kosher-search-filter-form .filters-group {
+  width: 100%;
+}
+
+.kosher-search-filter-form .mobile-filter-panel {
+  width: 100%;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-button {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-button::after {
+  background-size: 12px 12px !important;
+  height: 12px !important;
+  width: 12px !important;
+}
+
+.kosher-search-filter-form .search-sidebar .counter-selection {
+  font-size: 10px !important;
+  height: 19px !important;
+  width: 19px !important;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-body {
+  padding: 0 0 16px !important;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-body small,
+.kosher-search-filter-form .search-sidebar .accordion-body .small {
+  font-size: 11px !important;
+}
+
+.kosher-search-filter-form .search-sidebar .ts-wrapper {
+  width: 100%;
+}
+
+.kosher-search-filter-form .search-filters__sort--hidden {
+  display: none !important;
+}
+
+.kosher-search-filter-form__sidebar-sort {
+  border-bottom: 1px solid #d9d9d9;
+  border-top: 1px solid #d9d9d9;
+  padding: 18px 0 16px;
+  width: 100%;
+}
+
+.kosher-search-filter-form__sidebar-sort-title {
+  color: var(--kosher-muted);
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0 0 12px;
+  text-align: left;
+}
+
+.kosher-search-filter-form__sidebar-sort-option {
+  align-items: center;
+  color: #101322;
+  cursor: pointer;
+  display: flex;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 10px;
+  justify-content: flex-start;
+  line-height: 1.2;
+  margin: 0;
+  min-height: 34px;
+  padding: 6px 0;
+  width: 100%;
+}
+
+.kosher-search-filter-form__sidebar-sort-option input[type="radio"] {
+  accent-color: #7a147a;
+  flex: 0 0 auto;
+  height: 18px;
+  margin: 0;
+  order: 0;
+  width: 18px;
+}
+
+.kosher-search-filter-form__author-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+}
+
+.kosher-search-filter-form__author-option {
+  align-items: center;
+  border-bottom: 1px solid #e4e4e4;
+  color: #101322;
+  cursor: pointer;
+  display: flex;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  gap: 10px;
+  justify-content: flex-start;
+  line-height: 1.25;
+  margin: 0;
+  min-height: 42px;
+  padding: 8px 0;
+  width: 100%;
+}
+
+.kosher-search-filter-form__author-option:first-child {
+  border-top: 1px solid #e4e4e4;
+}
+
+.kosher-search-filter-form__author-option input[type="checkbox"] {
+  accent-color: #7a147a;
+  flex: 0 0 auto;
+  height: 18px;
+  margin: 0;
+  order: -1;
+  width: 18px;
+}
+
+.kosher-search-filter-form__author-count {
+  color: var(--kosher-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-body .ts-control {
+  display: none !important;
+}
+
+.kosher-search-filter-form .search-sidebar #chef-select-ts-control,
+.kosher-search-filter-form .search-sidebar #author-select-ts-control,
+.kosher-search-filter-form .search-sidebar #ingredients-select-ts-control,
+.kosher-search-filter-form .search-sidebar #ingredients-exclude-select-ts-control,
+.kosher-search-filter-form .search-sidebar #show-chef-select-ts-control {
+  align-items: center !important;
+  background: #fff !important;
+  border: 1px solid #b8b8b8 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  display: flex !important;
+  min-height: 44px !important;
+  padding: 0 14px !important;
+  width: 100% !important;
+}
+
+.kosher-search-filter-form .search-sidebar #chef-select-ts-control input,
+.kosher-search-filter-form .search-sidebar #author-select-ts-control input,
+.kosher-search-filter-form .search-sidebar #ingredients-select-ts-control input,
+.kosher-search-filter-form .search-sidebar #ingredients-exclude-select-ts-control input,
+.kosher-search-filter-form .search-sidebar #show-chef-select-ts-control input {
+  color: #333133 !important;
+  display: block !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-body .ts-wrapper {
+  min-height: 0 !important;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-body .ts-dropdown {
+  background: #fff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  display: block;
+  left: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: static !important;
+  top: auto !important;
+  transform: none !important;
+  width: 100% !important;
+}
+
+.kosher-search-filter-form .search-sidebar .accordion-body .ts-dropdown-content {
+  border: 0 !important;
+  max-height: 260px !important;
+}
+
+.kosher-search-filter-form .close-side-filter {
+  display: none;
+}
+
+/* Results */
+.kosher-search-filter-form .pagination {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  margin: 42px 0 0;
+  padding: 0;
+}
+
+.kosher-search-filter-form .pagination-list {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.kosher-search-filter-form .pagination .page-item {
+  display: inline-flex;
+}
+
+.kosher-search-filter-form .pagination .page-link {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--kosher-border);
+  color: var(--kosher-text);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  height: 38px;
+  justify-content: center;
+  min-width: 38px;
+  padding: 0 12px;
+  transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.kosher-search-filter-form .pagination .page-link.active,
+.kosher-search-filter-form .pagination .page-link:hover,
+.kosher-search-filter-form .pagination .page-link:focus {
+  background: var(--kosher-accent);
+  border-color: var(--kosher-accent);
+  color: #fff;
+}
+
+.kosher-search-filter-form .pagination .page-link--control {
+  font-size: 15px;
+}
+
+.kosher-search-filter-form .pagination .page-item.disabled .page-link,
+.kosher-search-filter-form .pagination .page-link[disabled] {
+  background: #f5f5f5;
+  border-color: var(--kosher-border);
+  color: var(--kosher-muted);
+  cursor: not-allowed;
+  opacity: .55;
+}
+
+.kosher-search-filter-form .pagination .page-item--ellipsis .page-link {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+  min-width: 22px;
+  padding: 0;
+}
+
+.kosher-search-filter-form .pagination .page-item--jump {
+  margin-left: 4px;
+}
+
+.kosher-search-filter-form .pagination-jump-form {
+  align-items: center;
+  color: var(--kosher-muted);
+  display: inline-flex;
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+}
+
+.kosher-search-filter-form .pagination-jump-form__input {
+  background: #fff;
+  border: 1px solid var(--kosher-border);
+  color: var(--kosher-text);
+  font-family: Inter, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  height: 38px;
+  padding: 0 8px;
+  text-align: center;
+  width: 72px;
+}
+
+.kosher-search-filter-form .pagination-jump-form__input:focus {
+  border-color: var(--kosher-accent);
+  box-shadow: none;
+  outline: 0;
+}
+
+.kosher-search-filter-form .pagination .pagination-jump-form__submit {
+  min-width: 44px;
+}
+
+.kosher-search-filter-form .load-more-btn {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--kosher-accent);
+  border-radius: 8px;
+  color: var(--kosher-accent);
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 184px;
+  padding: 10px 28px;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.kosher-search-filter-form .load-more-btn:hover,
+.kosher-search-filter-form .load-more-btn:focus {
+  background: var(--kosher-accent);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.kosher-search-filter-form .load-more-btn[disabled] {
+  cursor: wait;
+  opacity: .65;
+  transform: none;
+}
+
+@media screen and (min-width: 857px) {
+  .kosher-search-filter-form .btn-kosher--filter {
+    display: none !important;
+  }
+}
+
+@media screen and (max-width: 1023px) {
+  .kosher-search-filter-form .search-content {
+    padding: 0 24px 64px !important;
+  }
+}
+
+@media screen and (max-width: 856px) {
+  .kosher-search-filter-form .search-layout {
+    display: block;
+  }
+
+  .kosher-search-filter-form .search-sidebar {
+    background: #fff;
+    border-right: 0 !important;
+    display: none;
+    padding: 0 16px 88px !important;
+    width: 100%;
+  }
+
+  .kosher-search-filter-form .search-sidebar.opened-filter {
+    display: flex;
+  }
+
+  .kosher-search-filter-form .close-side-filter {
+    display: block;
+  }
+
+  .kosher-search-filter-form .search-content {
+    padding: 0 16px 56px !important;
+  }
+
+  .kosher-search-filter-form .header-tabs__inner {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .kosher-search-filter-form .header-tabs__controls {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+    margin-left: 0;
+    padding: 0 0 12px;
+    width: 100%;
+    white-space: normal;
+  }
+
+  .kosher-search-filter-form .header-tabs__controls .btn-kosher--filter {
+    flex: 0 0 auto;
+    margin-right: 0;
+    min-height: 38px;
+    padding: 8px 12px !important;
+  }
+
+  .kosher-search-filter-form .search-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .kosher-search-filter-form .search-controls-left,
+  .kosher-search-filter-form .search-controls-right {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .kosher-search-filter-form .section__selections {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px !important;
+    width: 100%;
+  }
+
+  .kosher-search-filter-form .section__selections__options {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .kosher-search-filter-form .includes-list,
+  .kosher-search-filter-form .excludes-list {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .kosher-search-filter-form .search-filters__sort {
+    flex: 1 1 170px;
+    justify-content: flex-start;
+    margin-left: 0 !important;
+    min-width: 0;
+  }
+
+  .kosher-search-filter-form .search-filters__sort select {
+    max-width: 180px;
+    width: 100%;
+  }
+}
