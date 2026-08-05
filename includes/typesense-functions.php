@@ -101,6 +101,15 @@ function kosher_typesense_menu_to_record(WP_Post $post)
 		}
 	}
 
+	$holidays      = array();
+	$holiday_terms = get_the_terms($post->ID, 'Holiday');
+
+	if (!empty($holiday_terms) && !is_wp_error($holiday_terms)) {
+		foreach ($holiday_terms as $term) {
+			$holidays[] = $term->name;
+		}
+	}
+
 	$section_titles = array();
 	$recipe_titles  = array();
 	$card_text      = array();
@@ -158,6 +167,8 @@ function kosher_typesense_menu_to_record(WP_Post $post)
 		'author_id'          => (int) $post->post_author,
 		'author_name'        => $author ? $author->display_name : '',
 		'categories'         => array_values(array_unique(array_filter($categories))),
+		'menus_categories'   => array_values(array_unique(array_filter($categories))),
+		'holidays'           => array_values(array_unique(array_filter($holidays))),
 		'section_titles'     => array_values(array_unique(array_filter(array_map('wp_strip_all_tags', $section_titles)))),
 		'recipe_titles'      => array_values(array_unique(array_filter(array_map('wp_strip_all_tags', $recipe_titles)))),
 		'card_text'          => array_values(array_unique(array_filter(array_map('wp_strip_all_tags', $card_text)))),

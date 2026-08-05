@@ -414,6 +414,20 @@ class Kosher_Typesense_Command
                 'dirty_values' => 'coerce_or_drop',
             ],
             [
+                'name' => 'menus_categories',
+                'type' => 'string[]',
+                'facet' => true,
+                'optional' => true,
+                'dirty_values' => 'coerce_or_drop',
+            ],
+            [
+                'name' => 'holidays',
+                'type' => 'string[]',
+                'facet' => true,
+                'optional' => true,
+                'dirty_values' => 'coerce_or_drop',
+            ],
+            [
                 'name' => 'section_titles',
                 'type' => 'string[]',
                 'facet' => false,
