@@ -5904,6 +5904,15 @@ if (authorTypeCheckboxes.length > 0) {
     searchInput.addEventListener('input', () => {
       const queryValue = searchInput.value.trim();
 
+      // Natural-language searches can be relatively expensive and should only
+      // run after an intentional submission. Keep the typed value local until
+      // Enter is pressed; the keypress handler below updates the URL and runs it.
+      if (typeSenseConfig.submitSearchOnEnterOnly) {
+        window.clearTimeout(searchDebounceTimer);
+        toggleCloseIcon();
+        return;
+      }
+
       if (searchInput.value.trim() === '') {
         const url = new URL(window.location.href);
         const params = Array.from(url.searchParams.keys());

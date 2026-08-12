@@ -347,6 +347,130 @@ function kosher_typesense_admin_json_request($method, $path, $body = null)
   return is_array($data) ? $data : array();
 }
 
+/**
+ * Return the Typesense NLS model used by the temporary /search-ai experience.
+ * If no model ID was configured, provision one from the site's existing OpenAI
+ * key. The secret is sent server-to-server to Typesense and is never localized
+ * into the browser.
+ *
+ * @return string
+ */
+function kosher_typesense_nl_model_id()
+{
+  $configured_id = (string) apply_filters(
+    'kosher_typesense_nl_model_id',
+    kosher_typesense_config_value(array('KOSHER_TYPESENSE_NL_MODEL_ID', 'TYPESENSE_NL_MODEL_ID'), '')
+  );
+
+  if ($configured_id !== '') {
+    return sanitize_key($configured_id);
+  }
+
+  $model_id = 'kosher-natural-language-search';
+  $model_version = '4';
+  $ready_value = $model_id . ':' . $model_version;
+  $system_prompt = implode(' ', array(
+    'Interpret every request as a structured search of Kosher.com recipes, menus, articles, or shows.',
+    'Preserve the main food, recipe, article, or show subject as q, but always generate filter_by and sort_by parameters for constraints expressed by the user.',
+    'For recipes use these exact filter mappings: holidays and Jewish occasions use occasions:=`Value`; Dairy, Meat, or Parve use preference:=`Value`; diets use diets:=`Value`; allergens or allergen-free constraints use contains_allergents:!=`Value`; difficulty uses difficulty:=`Value`; sources or publications use sources:=`Value`; recipe categories use recipe_category:=`Value`; cuisines use cuisine:=`Value`; included ingredients use ingredients:=`Value`; excluded ingredients use ingredients:!=`Value`; chefs use chefs:=`Value`.',
+    'For article searches use author:=`Value` for authors and article_sub_category:=`Value` for categories.',
+    'For menu searches use author_name:=`Value` for authors, categories:=`Value` for categories, holidays:=`Value` for holidays, sections_count for section-count constraints, cards_count for recipe-count constraints, and always preserve privacy:=`public`.',
+    'For episode or show searches use chef:=`Value` for chefs and show:=`Value` for show names.',
+    'Recognize likely human names as chef or author entities even when lowercase, unfamiliar, Hebrew-derived, Yiddish-derived, or Jewish names; never require the name to be present in your pretrained knowledge.',
+    'In recipe intent, a standalone likely person name or a name after chef, by, from, recipes by, or recipes from must become chefs:=`Title Cased Name`. Example: esty wolbe or recipes by esty wolbe becomes q:* and chefs:=`Esty Wolbe`.',
+    'In episode intent, the same chef-name pattern uses chef:=`Title Cased Name`. In article intent, by followed by a person name uses author:=`Title Cased Name`. In menu intent it uses author_name:=`Title Cased Name`.',
+    'A standalone person name defaults to recipe chef intent; only apply article, menu, or episode person filters when the query explicitly indicates that content type.',
+    'Do not treat ordinary dish names, ingredients, holidays, cuisines, diets, or cooking techniques as people.',
+    'Translate without, no, omit, exclude, avoiding, or free of an ingredient to ingredients:!=`Ingredient`; translate with, containing, includes, or made with an ingredient to ingredients:=`Ingredient`.',
+    'Dairy-free means contains_allergents:!=`Dairy`, gluten-free means contains_allergents:!=`Gluten`, nut-free means the appropriate contains_allergents exclusions, and other allergen-free phrases follow the same rule. Do not translate Dairy, Meat, or Parve into allergens when the user is asking for the recipe type; those values use preference.',
+    'When multiple acceptable values are requested, join values in the same filter group with ||. Join independent requirements and multiple exclusions with &&.',
+    'Translate maximum preparation-time requests to cook_time:<N where N is minutes.',
+    'Translate newest or latest to date:desc, oldest to date:asc, highest rated or best rated to rating:desc, and most liked or popular to likes:desc when those sortable fields exist.',
+    'Do not leave exclusion words such as without, no, omit, or exclude in q after creating the corresponding filter.',
+    'Correct obvious food-word misspellings when forming q or filter values.',
+    'Only use fields present in the supplied collection schema.',
+    'Never infer or recommend non-kosher ingredients or meat-and-dairy combinations.',
+  ));
+
+  if (get_option('kosher_typesense_nl_model_ready') === $ready_value) {
+    return $model_id;
+  }
+
+  $existing = kosher_typesense_admin_json_request('GET', 'nl_search_models/' . rawurlencode($model_id));
+  if (!is_wp_error($existing)) {
+    $updated = kosher_typesense_admin_json_request(
+      'PUT',
+      'nl_search_models/' . rawurlencode($model_id),
+      array(
+        'temperature' => 0.0,
+        'system_prompt' => $system_prompt,
+      )
+    );
+
+    if (!is_wp_error($updated)) {
+      update_option('kosher_typesense_nl_model_ready', $ready_value, false);
+      return $model_id;
+    }
+
+    kosher_typesense_debug_log('Typesense natural-language model update failed.', array('error' => $updated->get_error_message()));
+  }
+
+  $openai_api_key = kosher_typesense_openai_api_key();
+
+  if ($openai_api_key === '') {
+    kosher_typesense_debug_log('Natural-language model was not provisioned because the OpenAI API key is missing.');
+    return '';
+  }
+
+  $created = kosher_typesense_admin_json_request(
+    'POST',
+    'nl_search_models',
+    array(
+      'id' => $model_id,
+      'model_name' => 'openai/gpt-4.1-mini',
+      'api_key' => $openai_api_key,
+      'max_bytes' => 16000,
+      'temperature' => 0.0,
+      'system_prompt' => $system_prompt,
+    )
+  );
+
+  if (is_wp_error($created)) {
+    kosher_typesense_debug_log('Typesense natural-language model provisioning failed.', array('error' => $created->get_error_message()));
+    return '';
+  }
+
+  update_option('kosher_typesense_nl_model_ready', $ready_value, false);
+  return $model_id;
+}
+
+/**
+ * Resolve the OpenAI key from the settings formats used by the site's AI
+ * integrations. The value is only used in server-to-server requests.
+ *
+ * @return string
+ */
+function kosher_typesense_openai_api_key()
+{
+  $settings = get_option('kayco_ai_settings', array());
+  $candidates = array(
+    is_array($settings) ? ($settings['openai_api_key'] ?? '') : '',
+    get_option('kayco_ai_openai_api_key', ''),
+    get_option('kosher_ai_openai_key', ''),
+    kosher_typesense_raw_config_value('OPENAI_API_KEY', ''),
+    kosher_typesense_raw_config_value('KOSHER_OPENAI_API_KEY', ''),
+  );
+
+  foreach ($candidates as $candidate) {
+    $candidate = trim((string) $candidate);
+    if ($candidate !== '') {
+      return (string) apply_filters('kosher_typesense_openai_api_key', $candidate);
+    }
+  }
+
+  return (string) apply_filters('kosher_typesense_openai_api_key', '');
+}
+
 function kosher_typesense_recipe_placeholder_count()
 {
   $collection = kosher_typesense_collection_name('recipes');
@@ -766,6 +890,53 @@ function kosher_typesense_search_shortcode($atts = array())
 add_shortcode('kosher_typesense_search', 'kosher_typesense_search_shortcode');
 add_shortcode('kayco_typesense_search', 'kosher_typesense_search_shortcode');
 
+/**
+ * Identify the temporary natural-language search route. This supports both a
+ * real WordPress page with the search-ai slug and the plugin's virtual fallback
+ * route used in local/testing environments.
+ *
+ * @return bool
+ */
+function kosher_typesense_is_natural_language_search_page()
+{
+  if (is_page('search-ai')) {
+    return true;
+  }
+
+  $request_path = isset($_SERVER['REQUEST_URI'])
+    ? (string) wp_parse_url(wp_unslash($_SERVER['REQUEST_URI']), PHP_URL_PATH)
+    : '';
+
+  return untrailingslashit($request_path) === '/search-ai';
+}
+
+/**
+ * Render /search-ai even when no WordPress Page has been created yet.
+ */
+function kosher_typesense_render_natural_language_search_page()
+{
+  if (!kosher_typesense_is_natural_language_search_page() || is_page('search-ai')) {
+    return;
+  }
+
+  global $wp_query;
+  if ($wp_query instanceof WP_Query) {
+    $wp_query->is_404 = false;
+  }
+
+  status_header(200);
+  nocache_headers();
+  add_filter('pre_get_document_title', function () {
+    return __('AI Search', 'kosher-typesense-search');
+  });
+
+  get_header();
+  echo do_shortcode('[kosher_typesense_search template="filter"]'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+  get_footer();
+  exit;
+}
+add_action('template_redirect', 'kosher_typesense_render_natural_language_search_page', 0);
+
 
 
 
@@ -839,7 +1010,33 @@ function kosher_typesense_search_scripts()
   wp_enqueue_style('tom-select', 'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css', array(), '2.3.1');
   wp_enqueue_script('tom-select', 'https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js', array(), '2.3.1', true);
 
-  wp_enqueue_script('kosher-typesense-search-filter', plugin_dir_url(__FILE__) . 'js/kosher-typesense-search-filter.js', array('jquery', 'tom-select', 'swiper-js', 'mobile-detect'), kosher_typesense_asset_version('js/kosher-typesense-search-filter.js'), true);
+  $filter_dependencies = array('jquery', 'tom-select', 'swiper-js', 'mobile-detect');
+
+  if (kosher_typesense_is_natural_language_search_page()) {
+    wp_enqueue_script(
+      'kosher-typesense-search-filter-natural-language',
+      plugin_dir_url(__FILE__) . 'js/kosher-typesense-search-filter-natural-language.js',
+      array(),
+      kosher_typesense_asset_version('js/kosher-typesense-search-filter-natural-language.js'),
+      true
+    );
+
+    wp_localize_script(
+      'kosher-typesense-search-filter-natural-language',
+      'kosherNaturalLanguageConfig',
+      array(
+        'searchAction' => 'kosher_typesense_search',
+        'translateAction' => 'kosher_typesense_nl_translate',
+        'searchNonce' => wp_create_nonce('kosher_typesense_search_nonce'),
+        'modelId' => kosher_typesense_nl_model_id(),
+        'debugEnabled' => current_user_can('manage_options'),
+      )
+    );
+
+    $filter_dependencies[] = 'kosher-typesense-search-filter-natural-language';
+  }
+
+  wp_enqueue_script('kosher-typesense-search-filter', plugin_dir_url(__FILE__) . 'js/kosher-typesense-search-filter.js', $filter_dependencies, kosher_typesense_asset_version('js/kosher-typesense-search-filter.js'), true);
   wp_enqueue_script('kosher-typesense-search', plugin_dir_url(__FILE__) . 'js/kosher-typesense-search.js', array('jquery'), kosher_typesense_asset_version('js/kosher-typesense-search.js'), true);
   wp_enqueue_script('kosher-media-playback-guard', plugin_dir_url(__FILE__) . 'js/kosher-media-playback-guard.js', array(), kosher_typesense_asset_version('js/kosher-media-playback-guard.js'), true);
   wp_enqueue_style('kosher-typesense-search-styles', plugin_dir_url(__FILE__) . 'css/main.css', array(), kosher_typesense_asset_version('css/main.css'));
@@ -868,6 +1065,7 @@ function kosher_typesense_search_scripts()
 	    'isAuthenticated' => is_user_logged_in(),
 	    'collectionPrefix' => kosher_typesense_collection_prefix(),
 	    'collectionEnvironment' => kosher_typesense_collection_environment(),
+	    'submitSearchOnEnterOnly' => kosher_typesense_is_natural_language_search_page(),
 	    'collections' => array(
 	      'recipes' => kosher_typesense_collection_name('recipes'),
 	      'articles' => kosher_typesense_collection_name('articles'),
@@ -882,6 +1080,246 @@ function kosher_typesense_search_scripts()
   wp_localize_script('kosher-typesense-search', 'typeSenseConfig', $shared_config);
 }
 add_action('wp_enqueue_scripts', 'kosher_typesense_search_scripts');
+
+/**
+ * Resolve a possible recipe-chef name against the actual Typesense index.
+ * This scales independently of the number of chefs and preserves stored casing.
+ *
+ * @param string $query Natural-language query.
+ * @return array|null
+ */
+function kosher_typesense_resolve_recipe_chef($query)
+{
+  $query = trim((string) $query);
+  $candidate = $query;
+  $subject = '';
+
+  if (preg_match('/^(.*?)(?:\brecipes?\s+by\b|\bby\b|\bfrom\b|\bchef\b)\s+(.+)$/iu', $query, $matches)) {
+    $subject = trim((string) $matches[1]);
+    $candidate = trim((string) $matches[2]);
+  }
+
+  $subject = trim((string) preg_replace('/\b(recipes?|dishes|food)\b/iu', ' ', $subject));
+  if ($candidate === '' || count(preg_split('/\s+/u', $candidate)) > 5) {
+    return null;
+  }
+
+  $params = array(
+    'q' => $candidate,
+    'query_by' => 'chefs',
+    'per_page' => 10,
+    'include_fields' => 'chefs',
+    'num_typos' => 2,
+  );
+  $url = add_query_arg($params, kosher_typesense_url(
+    'collections/' . rawurlencode(kosher_typesense_collection_name('recipes')) . '/documents/search'
+  ));
+  $response = wp_remote_get($url, array(
+    'headers' => array('X-TYPESENSE-API-KEY' => kosher_typesense_search_api_key()),
+    'timeout' => 8,
+  ));
+
+  if (is_wp_error($response) || wp_remote_retrieve_response_code($response) < 200 || wp_remote_retrieve_response_code($response) >= 300) {
+    return null;
+  }
+
+  $data = json_decode(wp_remote_retrieve_body($response), true);
+  $candidate_normalized = strtolower(trim((string) preg_replace('/[^\p{L}\p{N}]+/u', ' ', $candidate)));
+  $partial_matches = array();
+
+  foreach (($data['hits'] ?? array()) as $hit) {
+    foreach (($hit['document']['chefs'] ?? array()) as $chef) {
+      $chef_normalized = strtolower(trim((string) preg_replace('/[^\p{L}\p{N}]+/u', ' ', (string) $chef)));
+      if ($chef_normalized === $candidate_normalized) {
+        return array(
+          'name' => (string) $chef,
+          'q' => $subject !== '' ? $subject : '*',
+          'match_type' => 'exact',
+          'standalone' => $subject === '',
+        );
+      }
+
+      if (preg_match('/(^|\s)' . preg_quote($candidate_normalized, '/') . '(\s|$)/u', $chef_normalized)) {
+        $partial_matches[(string) $chef] = true;
+      }
+    }
+  }
+
+  if (!empty($partial_matches)) {
+    return array(
+      'name' => $candidate,
+      'q' => $subject !== '' ? trim($subject . ' ' . $candidate) : $candidate,
+      'match_type' => 'partial',
+      'matches' => array_slice(array_keys($partial_matches), 0, 10),
+      'standalone' => $subject === '',
+    );
+  }
+
+  return null;
+}
+
+/**
+ * Translate a free-form search with the site's existing OpenAI connection when
+ * the Typesense cluster does not have an NLS model configured.
+ */
+function kosher_typesense_nl_translate()
+{
+  $nonce = isset($_SERVER['HTTP_X_KOSHER_TYPESENSE_NONCE'])
+    ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_KOSHER_TYPESENSE_NONCE']))
+    : '';
+
+  if (!wp_verify_nonce($nonce, 'kosher_typesense_search_nonce')) {
+    wp_send_json(array('error' => 'Invalid request token.'), 403);
+  }
+
+  $body = kosher_typesense_read_json_request();
+  $query = isset($body['q']) ? sanitize_text_field((string) $body['q']) : '';
+  if ($query === '') {
+    wp_send_json(array('translations' => array()));
+  }
+
+  $settings = get_option('kayco_ai_settings', array());
+  $api_key = kosher_typesense_openai_api_key();
+  $model = is_array($settings) && !empty($settings['model']) ? sanitize_text_field((string) $settings['model']) : 'gpt-4o-mini';
+
+  if ($api_key === '') {
+    wp_send_json(array('error' => 'OpenAI API key is not configured.'), 500);
+  }
+
+  $instructions = 'Convert the user request into Typesense search parameters for each collection. Return JSON only with a top-level translations object containing recipes, menus, articles, and episodes. Each must contain q, filter_by, sort_by, and primary_dish strings. primary_dish is the singular dish type the user actually wants, such as cheesecake, challah, soup, or lasagna; leave it empty for person, ingredient-only, broad, or non-recipe queries. Keep the main subject in q and remove words consumed by filters. Use only these mappings. Recipes: holidays=occasions:=`Value`; Dairy/Meat/Parve=preference:=`Value`; diets=diets:=`Value`; allergen-free or without an allergen=contains_allergents:!=`Value`; difficulty=difficulty:=`Value`; sources=sources:=`Value`; categories=recipe_category:=`Value`; cuisines=cuisine:=`Value`; included ingredients=ingredients:=`Value`; excluded ingredients=ingredients:!=`Value`; chefs=chefs:=`Value`; time limit=cook_time:<minutes. Articles: authors=author:=`Value`; categories=article_sub_category:=`Value`. Menus: authors=author_name:=`Value`; categories=categories:=`Value`; holidays=holidays:=`Value`. Episodes: chefs=chef:=`Value`; shows=show:=`Value`. Recognize likely human names even when lowercase, unfamiliar, Hebrew-derived, Yiddish-derived, or Jewish; do not require prior knowledge of the person. For recipe intent, a standalone likely person name or a name after chef, by, from, recipes by, or recipes from uses chefs:=`Title Cased Name`; for example esty wolbe and recipes by esty wolbe both use q:* and chefs:=`Esty Wolbe`. For episodes use chef:=`Title Cased Name`; for articles use author:=`Title Cased Name`; for menus use author_name:=`Title Cased Name`. A standalone person name defaults to recipe chef intent; only apply article, menu, or episode person filters when that content type is explicit. Do not classify dish names, ingredients, holidays, cuisines, diets, or techniques as people. Join alternatives with || and independent constraints with &&. Sort newest date:desc, oldest date:asc, highest rated rating:desc, popular likes:desc where supported. If a constraint does not apply to a collection, leave it out of that collection and keep only the relevant subject in q. Correct obvious food misspellings. Never invent filters outside these mappings.';
+
+  $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
+    'headers' => array(
+      'Authorization' => 'Bearer ' . $api_key,
+      'Content-Type' => 'application/json',
+    ),
+    'timeout' => 10,
+    'body' => wp_json_encode(array(
+      'model' => $model,
+      'temperature' => 0,
+      'response_format' => array('type' => 'json_object'),
+      'messages' => array(
+        array('role' => 'system', 'content' => $instructions),
+        array('role' => 'user', 'content' => $query),
+      ),
+    )),
+  ));
+
+  if (is_wp_error($response)) {
+    wp_send_json(array('error' => $response->get_error_message()), 502);
+  }
+
+  $status = wp_remote_retrieve_response_code($response);
+  $decoded = json_decode(wp_remote_retrieve_body($response), true);
+  $content = $decoded['choices'][0]['message']['content'] ?? '';
+  $translated = json_decode($content, true);
+
+  if ($status < 200 || $status >= 300 || !is_array($translated)) {
+    $message = $decoded['error']['message'] ?? 'OpenAI returned an invalid translation.';
+    wp_send_json(array('error' => $message), $status >= 400 ? $status : 502);
+  }
+
+  $translations = array();
+  foreach (array('recipes', 'menus', 'articles', 'episodes') as $collection) {
+    $params = isset($translated['translations'][$collection]) && is_array($translated['translations'][$collection])
+      ? $translated['translations'][$collection]
+      : array();
+    $translations[$collection] = array(
+      'q' => kosher_typesense_sanitize_scalar($params['q'] ?? $query, 500),
+      'filter_by' => kosher_typesense_normalize_ai_filter($params['filter_by'] ?? '', $collection),
+      'sort_by' => kosher_typesense_sanitize_sort($params['sort_by'] ?? ''),
+      'primary_dish' => kosher_typesense_sanitize_scalar($params['primary_dish'] ?? '', 100),
+    );
+  }
+
+  $resolved_chef = kosher_typesense_resolve_recipe_chef($query);
+  if (is_array($resolved_chef) && !empty($resolved_chef['name'])) {
+    $existing_filter = trim((string) $translations['recipes']['filter_by']);
+    $translations['recipes']['q'] = (string) $resolved_chef['q'];
+
+    if (($resolved_chef['match_type'] ?? '') === 'exact') {
+      $chef_filter = 'chefs:=`' . str_replace('`', '\\`', $resolved_chef['name']) . '`';
+      $translations['recipes']['filter_by'] = $existing_filter !== ''
+        ? '(' . $existing_filter . ') && (' . $chef_filter . ')'
+        : $chef_filter;
+    } elseif (!empty($resolved_chef['standalone'])) {
+      // A first-name-only lookup is intentionally a text search within the
+      // chefs field, not an exact filter against a possibly incomplete name.
+      $translations['recipes']['filter_by'] = '';
+    }
+
+    $translations['recipes']['resolved_entities'] = array(
+      'chef' => $resolved_chef['name'],
+      'source' => 'typesense_recipes.chefs',
+      'match_type' => $resolved_chef['match_type'] ?? 'exact',
+      'candidate_matches' => $resolved_chef['matches'] ?? array($resolved_chef['name']),
+    );
+  }
+
+  wp_send_json(array('translations' => $translations));
+}
+add_action('wp_ajax_kosher_typesense_nl_translate', 'kosher_typesense_nl_translate');
+add_action('wp_ajax_nopriv_kosher_typesense_nl_translate', 'kosher_typesense_nl_translate');
+
+/**
+ * Correct common model field aliases and quote generated string values before
+ * the filter reaches Typesense.
+ *
+ * @param string $filter Generated Typesense filter.
+ * @param string $collection Logical collection slug.
+ * @return string
+ */
+function kosher_typesense_normalize_ai_filter($filter, $collection)
+{
+  $filter = kosher_typesense_sanitize_filter_by($filter, 2000);
+  if ($filter === '') {
+    return '';
+  }
+
+  $aliases = array(
+    'recipes' => array(
+      'holiday' => 'occasions',
+      'holidays' => 'occasions',
+      'occasion' => 'occasions',
+      'allergens' => 'contains_allergents',
+      'allergies' => 'contains_allergents',
+      'category' => 'recipe_category',
+      'categories' => 'recipe_category',
+      'chef' => 'chefs',
+      'diet' => 'diets',
+      'source' => 'sources',
+      'ingredient' => 'ingredients',
+    ),
+    'articles' => array('authors' => 'author', 'category' => 'article_sub_category', 'categories' => 'article_sub_category'),
+    'menus' => array('author' => 'author_name', 'category' => 'categories', 'occasion' => 'holidays', 'occasions' => 'holidays'),
+    'episodes' => array('chefs' => 'chef', 'shows' => 'show'),
+  );
+
+  foreach (($aliases[$collection] ?? array()) as $from => $to) {
+    $filter = preg_replace('/\b' . preg_quote($from, '/') . '\s*:/i', $to . ':', $filter);
+  }
+
+  $filter = preg_replace_callback(
+    '/([A-Za-z0-9_-]+)\s*(:!=|:=|:<=|:>=|:<|:>)\s*([^&|()]+)/',
+    function ($matches) {
+      $value = trim((string) $matches[3]);
+      $is_quoted = strlen($value) >= 2 && (
+        ($value[0] === '`' && substr($value, -1) === '`') ||
+        ($value[0] === '"' && substr($value, -1) === '"')
+      );
+      $is_scalar = is_numeric($value) || in_array(strtolower($value), array('true', 'false'), true);
+
+      if (!$is_quoted && !$is_scalar) {
+        $value = '`' . str_replace('`', '\\`', $value) . '`';
+      }
+
+      return $matches[1] . $matches[2] . $value;
+    },
+    $filter
+  );
+
+  return kosher_typesense_sanitize_filter_by($filter, 2000);
+}
 
 function kosher_typesense_register_sources_rest_route()
 {
@@ -1158,7 +1596,7 @@ function kosher_typesense_sanitize_sort($sort_by)
     return '';
   }
 
-  $allowed_fields = array('_text_match', 'date', 'title', 'title_sort', 'rating', 'sections_count', 'cards_count');
+  $allowed_fields = array('_text_match', 'date', 'title', 'title_sort', 'rating', 'likes', 'cook_time', 'sections_count', 'cards_count');
   $parts = array();
 
   foreach (explode(',', $sort_by) as $part) {
@@ -1202,6 +1640,9 @@ function kosher_typesense_sanitize_search_request($search)
     'typo_tokens_threshold',
     'use_synonyms',
     'enable_overrides',
+    'nl_query',
+    'nl_query_debug',
+    'nl_model_id',
   );
 
   $clean = array();
@@ -1248,6 +1689,8 @@ function kosher_typesense_sanitize_search_request($search)
       case 'prioritize_token_position':
       case 'use_synonyms':
       case 'enable_overrides':
+      case 'nl_query':
+      case 'nl_query_debug':
         $clean[$key] = (bool) $search[$key];
         break;
 
@@ -1373,6 +1816,79 @@ function kosher_typesense_response_has_title_sort_error($decoded)
   return false;
 }
 
+function kosher_typesense_filter_primary_dish_hits($decoded, $primary_dish)
+{
+  if ($primary_dish === '' || empty($decoded['results'][0]['hits']) || !is_array($decoded['results'][0]['hits'])) {
+    return $decoded;
+  }
+
+  $api_key = kosher_typesense_openai_api_key();
+  if ($api_key === '') {
+    return $decoded;
+  }
+
+  $candidates = array();
+  foreach ($decoded['results'][0]['hits'] as $hit) {
+    if (!empty($hit['document']['postID']) && !empty($hit['document']['title'])) {
+      $candidates[] = array(
+        'id' => (string) $hit['document']['postID'],
+        'title' => (string) $hit['document']['title'],
+      );
+    }
+  }
+
+  if (empty($candidates)) {
+    return $decoded;
+  }
+
+  $settings = get_option('kayco_ai_settings', array());
+  $model = is_array($settings) && !empty($settings['model']) ? sanitize_text_field((string) $settings['model']) : 'gpt-4o-mini';
+  $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
+    'headers' => array('Authorization' => 'Bearer ' . $api_key, 'Content-Type' => 'application/json'),
+    'timeout' => 10,
+    'body' => wp_json_encode(array(
+      'model' => $model,
+      'temperature' => 0,
+      'response_format' => array('type' => 'json_object'),
+      'messages' => array(
+        array(
+          'role' => 'system',
+          'content' => 'Return JSON with keep_ids and rejected arrays. Keep a recipe only when its primary finished dish is the requested dish. Reject titles where the requested term is merely a flavor, filling, layer, component, or modifier of a different dish. Example: for cheesecake, keep Classic Cheesecake and Strawberry Cheesecake, but reject Cheesecake Mousse Cannolis, Cheesecake Cookies, Cheesecake Milkshake, and Cheesecake Popsicles.',
+        ),
+        array('role' => 'user', 'content' => wp_json_encode(array('requested_dish' => $primary_dish, 'candidates' => $candidates))),
+      ),
+    )),
+  ));
+
+  if (is_wp_error($response) || wp_remote_retrieve_response_code($response) < 200 || wp_remote_retrieve_response_code($response) >= 300) {
+    return $decoded;
+  }
+
+  $body = json_decode(wp_remote_retrieve_body($response), true);
+  $classification = json_decode($body['choices'][0]['message']['content'] ?? '', true);
+  if (!is_array($classification) || !array_key_exists('keep_ids', $classification) || !is_array($classification['keep_ids'])) {
+    return $decoded;
+  }
+
+  $keep_ids = isset($classification['keep_ids']) && is_array($classification['keep_ids'])
+    ? array_map('strval', $classification['keep_ids'])
+    : array();
+
+  $decoded['results'][0]['hits'] = array_values(array_filter(
+    $decoded['results'][0]['hits'],
+    function ($hit) use ($keep_ids) {
+      return isset($hit['document']['postID']) && in_array((string) $hit['document']['postID'], $keep_ids, true);
+    }
+  ));
+  $decoded['results'][0]['primary_dish_rerank'] = array(
+    'requested_dish' => $primary_dish,
+    'kept' => count($decoded['results'][0]['hits']),
+    'rejected' => $classification['rejected'] ?? array(),
+  );
+
+  return $decoded;
+}
+
 function kosher_typesense_search() {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         wp_send_json(array('error' => 'Invalid request method.'), 405);
@@ -1415,10 +1931,13 @@ function kosher_typesense_search() {
 
     $is_suggestion_request = isset($_SERVER['HTTP_X_KOSHER_TYPESENSE_SUGGESTIONS'])
       && '1' === sanitize_text_field(wp_unslash($_SERVER['HTTP_X_KOSHER_TYPESENSE_SUGGESTIONS']));
+    $primary_dish = isset($_SERVER['HTTP_X_KOSHER_PRIMARY_DISH'])
+      ? kosher_typesense_sanitize_scalar(wp_unslash($_SERVER['HTTP_X_KOSHER_PRIMARY_DISH']), 100)
+      : '';
 
     // Version the cache so responses produced under the previous scoped key
     // (including empty later pages) are not reused.
-    $cache_key = 'kosher_ts_v3_' . md5(wp_json_encode($payload));
+    $cache_key = 'kosher_ts_v5_' . md5(wp_json_encode($payload) . '|' . $primary_dish);
     $cache_ttl = (int) apply_filters('kosher_typesense_search_cache_ttl', 60, $payload);
     $cached = $cache_ttl > 0 ? get_transient($cache_key) : false;
 
@@ -1485,7 +2004,10 @@ function kosher_typesense_search() {
     }
 
     if ($cache_ttl > 0) {
+        $decoded = kosher_typesense_filter_primary_dish_hits($decoded, $primary_dish);
         set_transient($cache_key, $decoded, $cache_ttl);
+    } elseif ($primary_dish !== '') {
+        $decoded = kosher_typesense_filter_primary_dish_hits($decoded, $primary_dish);
     }
 
     if (!$is_suggestion_request && function_exists('kosher_typesense_track_search_response')) {
