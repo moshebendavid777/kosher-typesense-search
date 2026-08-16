@@ -33,6 +33,11 @@ if (file_exists($kosher_typesense_analytics)) {
 
 register_activation_hook(__FILE__, 'kosher_typesense_install_analytics_tables');
 
+$kosher_typesense_simple_search_context = plugin_dir_path(__FILE__) . 'includes/simple-search-context.php';
+if (file_exists($kosher_typesense_simple_search_context)) {
+  require_once $kosher_typesense_simple_search_context;
+}
+
 function kosher_typesense_raw_config_value($key, $default = '')
 {
   if (defined($key)) {
