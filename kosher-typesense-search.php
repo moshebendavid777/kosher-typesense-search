@@ -1215,7 +1215,15 @@ function kosher_typesense_nl_translate()
     wp_send_json(array('error' => 'OpenAI API key is not configured.'), 500);
   }
 
-  $instructions = 'Convert the user request into Typesense search parameters for each collection. Return JSON only with a top-level translations object containing recipes, menus, articles, and episodes. Each must contain q, filter_by, sort_by, and primary_dish strings. primary_dish is the singular dish type the user actually wants, such as cheesecake, challah, soup, or lasagna; leave it empty for person, ingredient-only, broad, or non-recipe queries. Keep the main subject in q and remove words consumed by filters. Use only these mappings. Recipes: holidays=occasions:=`Value`; Dairy/Meat/Parve=preference:=`Value`; diets=diets:=`Value`; allergen-free or without an allergen=contains_allergents:!=`Value`; difficulty=difficulty:=`Value`; sources=sources:=`Value`; categories=recipe_category:=`Value`; cuisines=cuisine:=`Value`; included ingredients=ingredients:=`Value`; excluded ingredients=ingredients:!=`Value`; chefs=chefs:=`Value`; time limit=cook_time:<minutes. Articles: authors=author:=`Value`; categories=article_sub_category:=`Value`. Menus: authors=author_name:=`Value`; categories=categories:=`Value`; holidays=holidays:=`Value`. Episodes: chefs=chef:=`Value`; shows=show:=`Value`. Recognize likely human names even when lowercase, unfamiliar, Hebrew-derived, Yiddish-derived, or Jewish; do not require prior knowledge of the person. For recipe intent, a standalone likely person name or a name after chef, by, from, recipes by, or recipes from uses chefs:=`Title Cased Name`; for example esty wolbe and recipes by esty wolbe both use q:* and chefs:=`Esty Wolbe`. For episodes use chef:=`Title Cased Name`; for articles use author:=`Title Cased Name`; for menus use author_name:=`Title Cased Name`. A standalone person name defaults to recipe chef intent; only apply article, menu, or episode person filters when that content type is explicit. Do not classify dish names, ingredients, holidays, cuisines, diets, or techniques as people. Join alternatives with || and independent constraints with &&. Sort newest date:desc, oldest date:asc, highest rated rating:desc, popular likes:desc where supported. If a constraint does not apply to a collection, leave it out of that collection and keep only the relevant subject in q. Correct obvious food misspellings. Never invent filters outside these mappings.';
+  $instructions = 'Convert the user request into Typesense search parameters for each collection. Return JSON only with a top-level translations object containing recipes, menus, articles, and episodes. Each must contain q, filter_by, sort_by, and primary_dish strings. primary_dish is the dish category the user wants, such as chicken thighs, chicken breasts, brisket, steak, salmon, potato kugel, cheesecake, cookies, challah, soup, or lasagna. A protein, cut of meat, poultry part, fish, baked good, or established preparation can itself be a finished dish category; NEVER turn a standalone dish request such as "chicken thighs", "brisket", "salmon", or "potato kugel" into an ingredients filter. For those examples keep the phrase in q, set the same phrase in primary_dish, and leave ingredients out of filter_by. Use ingredients:= only when the user explicitly expresses ingredient composition with wording such as "with", "containing", "made with", "using", or "that has". Use ingredients:!= for explicit exclusions such as "without". Keep the main subject in q and remove only words consumed by real filters. Use only these mappings. Recipes: holidays=occasions:=`Value`; Dairy/Meat/Parve=preference:=`Value`; diets=diets:=`Value`; allergen-free or without an allergen=contains_allergents:!=`Value`; difficulty=difficulty:=`Value`; sources=sources:=`Value`; categories=recipe_category:=`Value`; cuisines=cuisine:=`Value`; included ingredients=ingredients:=`Value`; excluded ingredients=ingredients:!=`Value`; chefs=chefs:=`Value`; time limit=cook_time:<minutes. Articles: authors=author:=`Value`; categories=article_sub_category:=`Value`. Menus: authors=author_name:=`Value`; categories=categories:=`Value`; holidays=holidays:=`Value`. Episodes: chefs=chef:=`Value`; shows=show:=`Value`. Recognize likely human names even when lowercase, unfamiliar, Hebrew-derived, Yiddish-derived, or Jewish; do not require prior knowledge of the person. For recipe intent, a standalone likely person name or a name after chef, by, from, recipes by, or recipes from uses chefs:=`Title Cased Name`; for example esty wolbe and recipes by esty wolbe both use q:* and chefs:=`Esty Wolbe`. For episodes use chef:=`Title Cased Name`; for articles use author:=`Title Cased Name`; for menus use author_name:=`Title Cased Name`. A standalone person name defaults to recipe chef intent; only apply article, menu, or episode person filters when that content type is explicit. Do not classify dish names, ingredients, holidays, cuisines, diets, or techniques as people. Join alternatives with || and independent constraints with &&. Sort newest date:desc, oldest date:asc, highest rated rating:desc, popular likes:desc where supported. If a constraint does not apply to a collection, leave it out of that collection and keep only the relevant subject in q. Correct obvious food misspellings. Never invent filters outside these mappings.';
+
+  $instructions_file = plugin_dir_path(__FILE__) . 'prompts/natural-language-search.txt';
+  if (is_readable($instructions_file)) {
+    $file_instructions = file_get_contents($instructions_file);
+    if (is_string($file_instructions) && trim($file_instructions) !== '') {
+      $instructions = trim($file_instructions);
+    }
+  }
 
   $response = wp_remote_post('https://api.openai.com/v1/chat/completions', array(
     'headers' => array(
@@ -1259,6 +1267,37 @@ function kosher_typesense_nl_translate()
       'sort_by' => kosher_typesense_sanitize_sort($params['sort_by'] ?? ''),
       'primary_dish' => kosher_typesense_sanitize_scalar($params['primary_dish'] ?? '', 100),
     );
+  }
+
+  // Guard against a recurring model error: the subject of a standalone dish
+  // search must not also become an ingredient constraint. This correction is
+  // generic, so it covers poultry parts, meat cuts, fish and named dishes
+  // without maintaining a fragile hard-coded food list.
+  $recipe_query = trim((string) $translations['recipes']['q']);
+  $recipe_filter = trim((string) $translations['recipes']['filter_by']);
+  $normalize_intent = static function ($value) {
+    $value = strtolower(remove_accents(wp_strip_all_tags((string) $value)));
+    return trim(preg_replace('/[^a-z0-9]+/', ' ', $value));
+  };
+  $normalized_recipe_query = $normalize_intent($recipe_query);
+  $standalone_request = !preg_match('/\b(with|containing|made with|using|that has|without|excluding|except)\b/i', $query);
+
+  if ($standalone_request && $normalized_recipe_query !== '' && $normalized_recipe_query !== '*') {
+    $recipe_filter = preg_replace_callback(
+      '/\(?\s*ingredients\s*:=\s*(`([^`]*)`|"([^"]*)"|([^&|()]+))\s*\)?/i',
+      static function ($matches) use ($normalize_intent, $normalized_recipe_query) {
+        $value = $matches[2] !== '' ? $matches[2] : ($matches[3] !== '' ? $matches[3] : $matches[4]);
+        return $normalize_intent($value) === $normalized_recipe_query ? '' : $matches[0];
+      },
+      $recipe_filter
+    );
+    $recipe_filter = preg_replace('/^\s*(&&|\|\|)\s*|\s*(&&|\|\|)\s*$/', '', (string) $recipe_filter);
+    $recipe_filter = preg_replace('/\s*(&&|\|\|)\s*(?=&&|\|\|)/', ' ', (string) $recipe_filter);
+    $translations['recipes']['filter_by'] = trim((string) $recipe_filter, " \t\n\r\0\x0B()");
+
+    if ($translations['recipes']['primary_dish'] === '') {
+      $translations['recipes']['primary_dish'] = $recipe_query;
+    }
   }
 
   $resolved_chef = kosher_typesense_resolve_recipe_chef($query);

@@ -35,7 +35,8 @@
       const submittedInput = event.target && event.target.closest
         ? event.target.closest('input[type="search"], input[type="text"]')
         : null;
-      const resultsSearchInput = document.querySelector('.kosher-search-filter-form .form-control');
+      const resultsSearchInput = document.querySelector('[data-kosher-filter-search="true"]')
+        || document.querySelector('.kosher-search-filter-form .form-control');
 
       if (!submittedInput || !resultsSearchInput) return;
 
