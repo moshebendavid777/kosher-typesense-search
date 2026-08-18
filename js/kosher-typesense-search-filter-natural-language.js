@@ -26,6 +26,47 @@
   let lastOriginalNaturalLanguageQuery = '';
   let activeNaturalLanguageRequests = 0;
 
+  function installNaturalLanguageSubmitBridge() {
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+
+      const submittedInput = event.target && event.target.closest
+        ? event.target.closest('input[type="search"], input[type="text"]')
+        : null;
+      const resultsSearchInput = document.querySelector('.kosher-search-filter-form .form-control');
+
+      if (!submittedInput || !resultsSearchInput) return;
+
+      const isSearchInput = submittedInput.id === 'searchInput'
+        || submittedInput.classList.contains('js-kayco-simple-search-input');
+
+      if (!isSearchInput) return;
+
+      const query = submittedInput.value.trim();
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      resultsSearchInput.value = query;
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete('act');
+      url.searchParams.delete('op');
+      if (query) url.searchParams.set('q', query);
+      else url.searchParams.delete('q');
+      window.history.replaceState({}, '', url);
+
+      resultsSearchInput.dispatchEvent(new CustomEvent('kosher:natural-language-search', {
+        detail: { query },
+      }));
+      resultsSearchInput.blur();
+    }, true);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', installNaturalLanguageSubmitBridge, { once: true });
+  } else {
+    installNaturalLanguageSubmitBridge();
+  }
+
   function setNaturalLanguageLoading(isLoading) {
     let indicator = document.getElementById('kosher-natural-language-search-loading');
 

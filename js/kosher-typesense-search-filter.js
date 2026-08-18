@@ -5308,6 +5308,21 @@ const baseFilter = filtersWithoutSource.length
     });
 };
 
+  // The search page and global header can both expose #searchInput. The NLS
+  // bridge deliberately calls this scoped search instance with the submitted
+  // value so another input cannot cause the old query to be rendered again.
+  searchInput.addEventListener('kosher:natural-language-search', (event) => {
+    const submittedQuery = event.detail && typeof event.detail.query === 'string'
+      ? event.detail.query.trim()
+      : searchInput.value.trim();
+
+    searchInput.value = submittedQuery;
+    resetPaginationState();
+    window.clearTimeout(searchDebounceTimer);
+    executeSearch(1, 1, 1, 1);
+    toggleCloseIcon();
+  });
+
 
 // 🔧 Helper to format each hit into your result structure
 function formatHit(hit, totalRecipes, totalMenus, totalArticles, totalShows) {
