@@ -338,6 +338,22 @@
     return filters.map((value) => `(${value})`).join(' && ');
   }
 
+  function inferPrimaryDish(query) {
+    const normalized = String(query || '').trim().toLowerCase();
+
+    if (!normalized || normalized === '*' || normalized.split(/\s+/).length > 5) {
+      return '';
+    }
+
+    // Structured requests are handled by generated filters; use this fallback
+    // only for short, dish-like searches when AI translation is unavailable.
+    if (/\b(without|free|under|less than|more than|for|by|from|chef|author|newest|oldest|popular|rated)\b/.test(normalized)) {
+      return '';
+    }
+
+    return normalized;
+  }
+
   function augmentWithOpenAITranslation(options) {
     if (!options || typeof options.body !== 'string') {
       return Promise.resolve(options);
@@ -382,7 +398,7 @@
         throw new Error(data && data.error ? data.error : 'Natural-language translation failed.');
       }
 
-      let primaryDish = '';
+      let primaryDish = inferPrimaryDish(querySearch.q);
       const searches = payload.searches.map((search, index) => {
         const naturalSearch = enableNaturalLanguageSearch(search);
         const translation = data.translations[getCollectionSlug(search.collection)] || {};
@@ -450,7 +466,14 @@
           : (error && error.message ? error.message : 'Unknown translation error.'),
       });
       console.error('[Kosher Typesense NLS] OpenAI translation failed.', error);
-      return options;
+      const fallbackDish = inferPrimaryDish(querySearch.q);
+      return fallbackDish ? {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          'X-Kosher-Primary-Dish': fallbackDish,
+        },
+      } : options;
     });
   }
 

@@ -1827,6 +1827,51 @@ function kosher_typesense_filter_primary_dish_hits($decoded, $primary_dish)
     return $decoded;
   }
 
+  $normalize = static function ($value) {
+    $value = strtolower(remove_accents(wp_strip_all_tags((string) $value)));
+    $value = preg_replace('/[^a-z0-9]+/', ' ', $value);
+    return trim(preg_replace('/\s+/', ' ', (string) $value));
+  };
+  $dish = $normalize($primary_dish);
+  $derivative_dishes = array(
+    'pizza', 'pizzas', 'sandwich', 'sandwiches', 'burger', 'burgers',
+    'taco', 'tacos', 'pie', 'pies', 'ice cream', 'milkshake', 'smoothie',
+    'mousse', 'cannoli', 'cannolis', 'muffin', 'muffins', 'cup', 'cups',
+    'popsicle', 'popsicles', 'dip', 'sauce', 'salad', 'soup', 'egg roll',
+  );
+  $scored_hits = array();
+
+  foreach ($decoded['results'][0]['hits'] as $position => $hit) {
+    $title = $normalize($hit['document']['title'] ?? '');
+    $score = 0;
+
+    if ($dish !== '' && $title === $dish) {
+      $score = 1000;
+    } elseif ($dish !== '' && preg_match('/(^| )' . preg_quote($dish, '/') . '( |$)/', $title)) {
+      $score = str_ends_with($title, $dish) ? 800 : (str_starts_with($title, $dish) ? 700 : 600);
+      $remainder = trim(str_replace($dish, ' ', $title));
+
+      foreach ($derivative_dishes as $derivative) {
+        if ($derivative !== $dish && preg_match('/(^| )' . preg_quote($derivative, '/') . '( |$)/', $remainder)) {
+          $score -= 650;
+          break;
+        }
+      }
+    }
+
+    $scored_hits[] = array('hit' => $hit, 'score' => $score, 'position' => $position);
+  }
+
+  usort($scored_hits, static function ($left, $right) {
+    return $right['score'] <=> $left['score'] ?: $left['position'] <=> $right['position'];
+  });
+  $decoded['results'][0]['hits'] = array_column($scored_hits, 'hit');
+  $decoded['results'][0]['primary_dish_rerank'] = array(
+    'requested_dish' => $primary_dish,
+    'provider' => 'deterministic',
+    'ranked' => count($scored_hits),
+  );
+
   $api_key = kosher_typesense_openai_api_key();
   if ($api_key === '') {
     return $decoded;
@@ -1879,15 +1924,17 @@ function kosher_typesense_filter_primary_dish_hits($decoded, $primary_dish)
     ? array_map('strval', $classification['keep_ids'])
     : array();
 
-  $decoded['results'][0]['hits'] = array_values(array_filter(
-    $decoded['results'][0]['hits'],
-    function ($hit) use ($keep_ids) {
-      return isset($hit['document']['postID']) && in_array((string) $hit['document']['postID'], $keep_ids, true);
-    }
-  ));
+  // AI-confirmed canonical dishes lead; derivative recipes remain available
+  // later in the result set instead of disappearing from pagination.
+  usort($decoded['results'][0]['hits'], static function ($left, $right) use ($keep_ids) {
+    $left_id = (string) ($left['document']['postID'] ?? '');
+    $right_id = (string) ($right['document']['postID'] ?? '');
+    return (int) in_array($right_id, $keep_ids, true) <=> (int) in_array($left_id, $keep_ids, true);
+  });
   $decoded['results'][0]['primary_dish_rerank'] = array(
     'requested_dish' => $primary_dish,
-    'kept' => count($decoded['results'][0]['hits']),
+    'provider' => 'openai',
+    'canonical' => count($keep_ids),
     'rejected' => $classification['rejected'] ?? array(),
   );
 
@@ -1942,7 +1989,7 @@ function kosher_typesense_search() {
 
     // Version the cache so responses produced under the previous scoped key
     // (including empty later pages) are not reused.
-    $cache_key = 'kosher_ts_v5_' . md5(wp_json_encode($payload) . '|' . $primary_dish);
+    $cache_key = 'kosher_ts_v6_' . md5(wp_json_encode($payload) . '|' . $primary_dish);
     $cache_ttl = (int) apply_filters('kosher_typesense_search_cache_ttl', 60, $payload);
     $cached = $cache_ttl > 0 ? get_transient($cache_key) : false;
 
