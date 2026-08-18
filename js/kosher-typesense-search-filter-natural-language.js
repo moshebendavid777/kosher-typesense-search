@@ -115,42 +115,19 @@
     const collectionName = String(collection || '');
 
     if (collectionName.endsWith('_recipes') || collectionName === 'recipes') {
-      return [
-        'title',
-        'chefs',
-        'tags',
-        'ingredients',
-        'occasions',
-        'preference',
-        'diets',
-        'contains_allergents',
-        'difficulty',
-        'sources',
-        'recipe_category',
-        'cuisine',
-      ].join(',');
+      return fallback || 'title,chefs,tags,ingredients';
     }
 
     if (collectionName.endsWith('_menus') || collectionName === 'menus') {
-      return [
-        'title',
-        'description',
-        'categories',
-        'menus_categories',
-        'holidays',
-        'section_titles',
-        'recipe_titles',
-        'card_text',
-        'author_name',
-      ].join(',');
+      return fallback || 'title,description,categories,author_name';
     }
 
     if (collectionName.endsWith('_articles') || collectionName === 'articles') {
-      return 'title,author,article_sub_category,tags';
+      return fallback || 'title,author,article_sub_category';
     }
 
     if (collectionName.endsWith('_episodes') || collectionName === 'episodes') {
-      return 'title,chef,show,tags';
+      return fallback || 'title,chef,show';
     }
 
     return fallback || 'title';
@@ -286,7 +263,11 @@
 
     if (recipeRankingFieldsAvailable && getCollectionSlug(search.collection) === 'recipes') {
       naturalSearch.query_by = `main_dish,${naturalSearch.query_by}`;
-      naturalSearch.query_by_weights = '30,12,5,3,2,2,2,2,2,2,2,2,2';
+      const existingFields = String(search.query_by || '').split(',').filter(Boolean);
+      const existingWeights = String(search.query_by_weights || '').split(',').filter(Boolean);
+      naturalSearch.query_by_weights = ['30'].concat(
+        existingFields.map((field, index) => existingWeights[index] || '2')
+      ).join(',');
 
       if (naturalSearch.sort_by === '_text_match:desc,date:desc') {
         naturalSearch.sort_by = '_text_match:desc,search_priority:desc,date:desc';

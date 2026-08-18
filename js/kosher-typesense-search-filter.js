@@ -5205,9 +5205,11 @@ const baseFilter = filtersWithoutSource.length
         }
 
       const recipeResult = data.results[0];
-      if (recipeResult) {
+      if (recipeResult && Array.isArray(recipeResult.hits)) {
         totalRecipes = recipeResult.found || 0;
         recipeResult.hits.forEach(hit => results.push(formatHit(hit)));
+      } else if (recipeResult && recipeResult.error) {
+        console.error('[Kosher Typesense] recipes collection search failed:', recipeResult.error);
       }
 
       if (!kosherCountResult && includeKosherAuthors && !includeHomeAuthors) {
@@ -5227,21 +5229,27 @@ const baseFilter = filtersWithoutSource.length
       }
 
       const menuResult = data.results[1];
-      if (menuResult) {
+      if (menuResult && Array.isArray(menuResult.hits)) {
         totalMenus = menuResult.found || 0;
         menuResult.hits.forEach(hit => results.push(formatHit(hit)));
+      } else if (menuResult && menuResult.error) {
+        console.error('[Kosher Typesense] menus collection search failed:', menuResult.error);
       }
 
       const articleResult = data.results[2];
-      if (articleResult) {
+      if (articleResult && Array.isArray(articleResult.hits)) {
         totalArticles = articleResult.found || 0;
         articleResult.hits.forEach(hit => results.push(formatHit(hit)));
+      } else if (articleResult && articleResult.error) {
+        console.error('[Kosher Typesense] articles collection search failed:', articleResult.error);
       }
 
       const showResult = data.results[3];
-      if (showResult) {
+      if (showResult && Array.isArray(showResult.hits)) {
         totalShows = showResult.found || 0;
         showResult.hits.forEach(hit => results.push(formatHit(hit)));
+      } else if (showResult && showResult.error) {
+        console.error('[Kosher Typesense] episodes collection search failed:', showResult.error);
       }
 
       let recipeTabTotal = totalRecipes;
