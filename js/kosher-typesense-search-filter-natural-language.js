@@ -21,6 +21,8 @@
     : '';
   const debugEnabled = naturalLanguageConfig.debugEnabled === true
     || naturalLanguageConfig.debugEnabled === '1';
+  const recipeRankingFieldsAvailable = naturalLanguageConfig.recipeRankingFieldsAvailable === true
+    || naturalLanguageConfig.recipeRankingFieldsAvailable === '1';
   let lastNaturalLanguageSearches = [];
   let lastFallbackDebug = [];
   let lastOriginalNaturalLanguageQuery = '';
@@ -281,6 +283,15 @@
       query_by: getNaturalLanguageQueryBy(search.collection, search.query_by),
     };
 
+    if (recipeRankingFieldsAvailable && getCollectionSlug(search.collection) === 'recipes') {
+      naturalSearch.query_by = `main_dish,${naturalSearch.query_by}`;
+      naturalSearch.query_by_weights = '30,12,5,3,2,2,2,2,2,2,2,2,2';
+
+      if (naturalSearch.sort_by === '_text_match:desc,date:desc') {
+        naturalSearch.sort_by = '_text_match:desc,search_priority:desc,date:desc';
+      }
+    }
+
     if (modelId) {
       naturalSearch.nl_query = true;
       naturalSearch.nl_query_debug = true;
@@ -295,7 +306,9 @@
 
     // These keyword-only tuning options can override or distort the structured
     // query produced by NLS. query_by and explicit UI filter_by remain intact.
-    delete naturalSearch.query_by_weights;
+    if (!recipeRankingFieldsAvailable || getCollectionSlug(search.collection) !== 'recipes') {
+      delete naturalSearch.query_by_weights;
+    }
     delete naturalSearch.num_typos;
     delete naturalSearch.prioritize_exact_match;
     delete naturalSearch.prioritize_token_position;

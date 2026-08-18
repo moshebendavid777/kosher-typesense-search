@@ -42,6 +42,19 @@ class Kosher_Typesense_Command
                 'sort' => true
             ],
             [
+                'name' => 'main_dish',
+                'type' => 'string',
+                'facet' => true,
+                'sort' => true,
+                'optional' => true,
+            ],
+            [
+                'name' => 'search_priority',
+                'type' => 'int32',
+                'sort' => true,
+                'optional' => true,
+            ],
+            [
                 'name' => 'likes',
                 'type' => 'int32',
                 'sort' => true

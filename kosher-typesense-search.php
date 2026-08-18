@@ -476,6 +476,29 @@ function kosher_typesense_openai_api_key()
   return (string) apply_filters('kosher_typesense_openai_api_key', '');
 }
 
+function kosher_typesense_recipe_ranking_fields_available()
+{
+  $collection = kosher_typesense_collection_name('recipes');
+  $cache_key = 'kosher_ts_recipe_ranking_fields_' . md5($collection);
+  $cached = get_transient($cache_key);
+
+  if ($cached === 'yes' || $cached === 'no') {
+    return $cached === 'yes';
+  }
+
+  $schema = kosher_typesense_admin_json_request('GET', 'collections/' . rawurlencode($collection));
+  $field_names = array();
+
+  if (!is_wp_error($schema) && !empty($schema['fields']) && is_array($schema['fields'])) {
+    $field_names = array_column($schema['fields'], 'name');
+  }
+
+  $available = in_array('main_dish', $field_names, true) && in_array('search_priority', $field_names, true);
+  set_transient($cache_key, $available ? 'yes' : 'no', 5 * MINUTE_IN_SECONDS);
+
+  return $available;
+}
+
 function kosher_typesense_recipe_placeholder_count()
 {
   $collection = kosher_typesense_collection_name('recipes');
@@ -1034,6 +1057,7 @@ function kosher_typesense_search_scripts()
         'translateAction' => 'kosher_typesense_nl_translate',
         'searchNonce' => wp_create_nonce('kosher_typesense_search_nonce'),
         'modelId' => kosher_typesense_nl_model_id(),
+        'recipeRankingFieldsAvailable' => kosher_typesense_recipe_ranking_fields_available(),
         'debugEnabled' => current_user_can('manage_options'),
       )
     );
@@ -1601,7 +1625,7 @@ function kosher_typesense_sanitize_sort($sort_by)
     return '';
   }
 
-  $allowed_fields = array('_text_match', 'date', 'title', 'title_sort', 'rating', 'likes', 'cook_time', 'sections_count', 'cards_count');
+  $allowed_fields = array('_text_match', 'date', 'title', 'title_sort', 'rating', 'likes', 'cook_time', 'search_priority', 'sections_count', 'cards_count');
   $parts = array();
 
   foreach (explode(',', $sort_by) as $part) {
@@ -1843,9 +1867,21 @@ function kosher_typesense_filter_primary_dish_hits($decoded, $primary_dish)
 
   foreach ($decoded['results'][0]['hits'] as $position => $hit) {
     $title = $normalize($hit['document']['title'] ?? '');
+    $indexed_main_dish = $normalize(
+      $hit['document']['main_dish']
+        ?? $hit['document']['kosher_main_dish']
+        ?? ''
+    );
+    $search_priority = max(0, min(1000, (int) (
+      $hit['document']['search_priority']
+        ?? $hit['document']['kosher_search_priority']
+        ?? 0
+    )));
     $score = 0;
 
-    if ($dish !== '' && $title === $dish) {
+    if ($dish !== '' && $indexed_main_dish !== '' && $indexed_main_dish === $dish) {
+      $score = 2000;
+    } elseif ($dish !== '' && $title === $dish) {
       $score = 1000;
     } elseif ($dish !== '' && preg_match('/(^| )' . preg_quote($dish, '/') . '( |$)/', $title)) {
       $score = str_ends_with($title, $dish) ? 800 : (str_starts_with($title, $dish) ? 700 : 600);
@@ -1859,17 +1895,30 @@ function kosher_typesense_filter_primary_dish_hits($decoded, $primary_dish)
       }
     }
 
-    $scored_hits[] = array('hit' => $hit, 'score' => $score, 'position' => $position);
+    $scored_hits[] = array(
+      'hit' => $hit,
+      'score' => $score,
+      'priority' => $search_priority,
+      'position' => $position,
+    );
   }
 
   usort($scored_hits, static function ($left, $right) {
-    return $right['score'] <=> $left['score'] ?: $left['position'] <=> $right['position'];
+    return $right['score'] <=> $left['score']
+      ?: $right['priority'] <=> $left['priority']
+      ?: $left['position'] <=> $right['position'];
   });
   $decoded['results'][0]['hits'] = array_column($scored_hits, 'hit');
   $decoded['results'][0]['primary_dish_rerank'] = array(
     'requested_dish' => $primary_dish,
     'provider' => 'deterministic',
     'ranked' => count($scored_hits),
+    'uses_main_dish' => (bool) array_filter($scored_hits, static function ($item) {
+      return $item['score'] >= 2000;
+    }),
+    'uses_search_priority' => (bool) array_filter($scored_hits, static function ($item) {
+      return $item['priority'] > 0;
+    }),
   );
 
   $api_key = kosher_typesense_openai_api_key();

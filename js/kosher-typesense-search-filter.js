@@ -4991,6 +4991,8 @@ const baseFilter = filtersWithoutSource.length
     'postID',
     'url',
     'title',
+    'main_dish',
+    'search_priority',
     'chef',
     'author',
     'article_sub_category',

@@ -793,6 +793,11 @@ function typesense_post_to_record($post)
 		'featured_recipe' => (int) (!empty(get_field('featured_recipe', $post->ID))) ? 1 : 0,
 	];
 
+	if ($post->post_type === 'recipes') {
+		$data['main_dish'] = sanitize_text_field((string) get_post_meta($post->ID, '_kosher_main_dish', true));
+		$data['search_priority'] = max(0, min(1000, (int) get_post_meta($post->ID, '_kosher_search_priority', true)));
+	}
+
 	$link = get_post_permalink($post->ID);
 
 	$end_point = explode('/' . $post->post_type, $link);
