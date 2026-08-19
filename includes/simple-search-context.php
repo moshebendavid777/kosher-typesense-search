@@ -109,6 +109,34 @@ function kosher_typesense_simple_search_document_card($document, $index, $post_t
   return $html;
 }
 
+function kosher_typesense_simple_search_resolve_post_id($id, $title, $url, $post_type)
+{
+  $id = absint($id);
+  $post_type = sanitize_key($post_type);
+
+  if ($id && get_post_type($id) === $post_type && get_post_status($id) === 'publish') {
+    return $id;
+  }
+
+  if ($post_type === 'recipes' && function_exists('kayco_resolve_legacy_recipe_post_id')) {
+    $resolved_id = kayco_resolve_legacy_recipe_post_id($id, $title);
+    if ($resolved_id && get_post_type($resolved_id) === $post_type && get_post_status($resolved_id) === 'publish') {
+      return $resolved_id;
+    }
+  }
+
+  $path = (string) wp_parse_url((string) $url, PHP_URL_PATH);
+  $slug = sanitize_title(basename(untrailingslashit($path)));
+  if ($slug !== '') {
+    $post = get_page_by_path($slug, OBJECT, $post_type);
+    if ($post instanceof WP_Post && $post->post_status === 'publish') {
+      return (int) $post->ID;
+    }
+  }
+
+  return 0;
+}
+
 function kosher_typesense_simple_search_context_ajax()
 {
   check_ajax_referer('kayco_frontend_ajax', 'nonce');
@@ -219,10 +247,12 @@ function kosher_typesense_simple_search_context_ajax()
     $document = is_array($hit['document'] ?? null) ? $hit['document'] : array();
     $post_id = absint($hit['document']['postID'] ?? 0);
     $title = sanitize_text_field((string) ($document['title'] ?? ''));
-
-    if ($post_type === 'recipes' && function_exists('kayco_resolve_legacy_recipe_post_id')) {
-      $post_id = kayco_resolve_legacy_recipe_post_id($post_id, $title);
-    }
+    $post_id = kosher_typesense_simple_search_resolve_post_id(
+      $post_id,
+      $title,
+      (string) ($document['url'] ?? ''),
+      $post_type
+    );
 
     if (!$post_id || get_post_type($post_id) !== $post_type || get_post_status($post_id) !== 'publish') {
       // Staging Typesense and a developer's local database are not always
@@ -273,10 +303,7 @@ function kosher_typesense_simple_search_results_ajax()
   $missing_ids = array();
 
   foreach ($ids as $id) {
-    $resolved_id = $id;
-    if ($post_type === 'recipes' && function_exists('kayco_resolve_legacy_recipe_post_id')) {
-      $resolved_id = kayco_resolve_legacy_recipe_post_id($id, '');
-    }
+    $resolved_id = kosher_typesense_simple_search_resolve_post_id($id, '', '', $post_type);
 
     if (!$resolved_id || get_post_type($resolved_id) !== $post_type || get_post_status($resolved_id) !== 'publish') {
       $missing_ids[] = $id;
@@ -323,11 +350,13 @@ function kosher_typesense_simple_search_results_ajax()
 
   $html = '';
   foreach ($ids as $index => $id) {
-    $post_id = $id;
     $title = sanitize_text_field((string) ($documents[$id]['title'] ?? ''));
-    if ($post_type === 'recipes' && function_exists('kayco_resolve_legacy_recipe_post_id')) {
-      $post_id = kayco_resolve_legacy_recipe_post_id($id, $title);
-    }
+    $post_id = kosher_typesense_simple_search_resolve_post_id(
+      $id,
+      $title,
+      (string) ($documents[$id]['url'] ?? ''),
+      $post_type
+    );
 
     if ($post_id && get_post_type($post_id) === $post_type && get_post_status($post_id) === 'publish' && function_exists('kayco_render_typesense_simple_search_item_html')) {
       $html .= kayco_render_typesense_simple_search_item_html(
