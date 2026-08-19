@@ -252,5 +252,99 @@ function kosher_typesense_simple_search_context_ajax()
   ));
 }
 
+/**
+ * Render IDs already selected by Typesense without filtering them a second
+ * time against potentially stale or differently-shaped WordPress ACF data.
+ */
+function kosher_typesense_simple_search_results_ajax()
+{
+  check_ajax_referer('kayco_frontend_ajax', 'nonce');
+
+  $post_type = sanitize_key(wp_unslash($_POST['post_type'] ?? 'recipes'));
+  $allowed_post_types = array('recipes', 'articles', 'episodes', 'shows', 'menus');
+  if (!in_array($post_type, $allowed_post_types, true)) {
+    wp_send_json_error(array('message' => 'Unsupported search post type.'), 400);
+  }
+
+  $card_context = sanitize_key(wp_unslash($_POST['card_context'] ?? ''));
+  $ids = isset($_POST['ids']) ? array_map('absint', (array) wp_unslash($_POST['ids'])) : array();
+  $ids = array_slice(array_values(array_filter(array_unique($ids))), 0, 45);
+  $documents = array();
+  $missing_ids = array();
+
+  foreach ($ids as $id) {
+    $resolved_id = $id;
+    if ($post_type === 'recipes' && function_exists('kayco_resolve_legacy_recipe_post_id')) {
+      $resolved_id = kayco_resolve_legacy_recipe_post_id($id, '');
+    }
+
+    if (!$resolved_id || get_post_type($resolved_id) !== $post_type || get_post_status($resolved_id) !== 'publish') {
+      $missing_ids[] = $id;
+    }
+  }
+
+  // This fallback matters on staging/local environments whose WordPress DB is
+  // behind the Typesense collection. It also guarantees one card per hit.
+  if ($missing_ids) {
+    $api_key = kosher_typesense_admin_api_key();
+    if ($api_key === '') {
+      $api_key = kosher_typesense_search_api_key();
+    }
+
+    if ($api_key !== '') {
+      $document_search = array(
+        'searches' => array(array(
+          'collection' => kosher_typesense_collection_name($post_type),
+          'q' => '*',
+          'query_by' => 'title',
+          'filter_by' => 'postID:=[' . implode(',', $missing_ids) . ']',
+          'include_fields' => 'postID,title,url,image,chefs,author,author_name',
+          'per_page' => count($missing_ids),
+        )),
+      );
+      $response = wp_remote_post(kosher_typesense_url('multi_search'), array(
+        'headers' => array('Content-Type' => 'application/json', 'X-TYPESENSE-API-KEY' => $api_key),
+        'body' => wp_json_encode($document_search),
+        'timeout' => 15,
+      ));
+
+      if (!is_wp_error($response)) {
+        $decoded = json_decode(wp_remote_retrieve_body($response), true);
+        foreach ((array) ($decoded['results'][0]['hits'] ?? array()) as $hit) {
+          $document = is_array($hit['document'] ?? null) ? $hit['document'] : array();
+          $document_id = absint($document['postID'] ?? 0);
+          if ($document_id) {
+            $documents[$document_id] = $document;
+          }
+        }
+      }
+    }
+  }
+
+  $html = '';
+  foreach ($ids as $index => $id) {
+    $post_id = $id;
+    $title = sanitize_text_field((string) ($documents[$id]['title'] ?? ''));
+    if ($post_type === 'recipes' && function_exists('kayco_resolve_legacy_recipe_post_id')) {
+      $post_id = kayco_resolve_legacy_recipe_post_id($id, $title);
+    }
+
+    if ($post_id && get_post_type($post_id) === $post_type && get_post_status($post_id) === 'publish' && function_exists('kayco_render_typesense_simple_search_item_html')) {
+      $html .= kayco_render_typesense_simple_search_item_html(
+        $post_id,
+        $index,
+        $post_type,
+        array('card_context' => $card_context)
+      );
+    } elseif (isset($documents[$id])) {
+      $html .= kosher_typesense_simple_search_document_card($documents[$id], $index, $post_type);
+    }
+  }
+
+  wp_send_json_success(array('html' => $html));
+}
+
 add_action('wp_ajax_kayco_render_typesense_simple_search_context_page', 'kosher_typesense_simple_search_context_ajax', 1);
 add_action('wp_ajax_nopriv_kayco_render_typesense_simple_search_context_page', 'kosher_typesense_simple_search_context_ajax', 1);
+add_action('wp_ajax_kayco_render_typesense_simple_search_results', 'kosher_typesense_simple_search_results_ajax', 1);
+add_action('wp_ajax_nopriv_kayco_render_typesense_simple_search_results', 'kosher_typesense_simple_search_results_ajax', 1);
