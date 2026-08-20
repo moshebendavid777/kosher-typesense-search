@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const selectedExcludeIngredientsContainer = document.getElementById('selected-ingredients-exclude-container');
   const filterButton = document.querySelector('.btn-kosher--filter');
   const filterFormResult = document.querySelector('.kosher-search-filter-form-result__filter');
+  const mobileFilterCloseButton = document.querySelector('.kosher-search-filter-form__mobile-filter-close');
   const headerContainer = document.querySelector('.header__area .container');
   const searchFilterForm = document.querySelector('.kosher-search-filter-form');
   const applyFilterBtn = document.querySelector('.btn-apply');
@@ -651,55 +652,60 @@ function syncAuthorTypeCheckboxes(selectedTypes = getSelectedAuthorTypes()) {
   }
   
 
-  if(filterButton) {
-  // Add click event listener to the button 
-  filterButton.addEventListener('click', function() {
+  function setMobileFilterOpen(isOpen) {
     if (!filterFormResult) {
       return;
     }
 
-    // Toggle the class .opened-filter on the form result filter
-    filterFormResult.classList.toggle('opened-filter');
-    if (applyFilterBtn) {
-      applyFilterBtn.classList.toggle('active-btn');
-    }
-  });
+    filterFormResult.classList.toggle('opened-filter', isOpen);
+    document.body.classList.toggle('kosher-mobile-filters-open', isOpen);
 
+    if (filterButton) {
+      filterButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    }
+
+    if (applyFilterBtn) {
+      applyFilterBtn.classList.toggle('active-btn', isOpen);
+    }
+
+    if (isOpen && mobileFilterCloseButton) {
+      window.setTimeout(() => mobileFilterCloseButton.focus(), 50);
+    } else if (!isOpen && filterButton) {
+      filterButton.focus({ preventScroll: true });
+    }
   }
 
-
-  if(    document.querySelector('.close-side-filter')) {
-    // Optional: If you want to add a separate toggle for .collapse__filter as well
-    document.querySelector('.close-side-filter').addEventListener('click', function() {
-      if (!filterFormResult) {
-        return;
-      }
-
-      // Toggle the class .opened-filter on the form result filter
-      filterFormResult.classList.toggle('opened-filter');
-      if (applyFilterBtn) {
-        applyFilterBtn.classList.toggle('active-btn');
-      }
-      
+  if (filterButton) {
+    filterButton.setAttribute('aria-expanded', 'false');
+    filterButton.addEventListener('click', function() {
+      setMobileFilterOpen(!filterFormResult.classList.contains('opened-filter'));
     });
-
   }
 
-if(document.querySelector('.btn-apply')) {
-  document.querySelector('.btn-apply').addEventListener('click', function() {
-    if (!filterFormResult) {
-      return;
-    }
+  const legacyCloseSideFilter = document.querySelector('.close-side-filter');
+  if (legacyCloseSideFilter) {
+    legacyCloseSideFilter.addEventListener('click', function() {
+      setMobileFilterOpen(false);
+    });
+  }
 
-    // Toggle the class .opened-filter on the form result filter
-    filterFormResult.classList.toggle('opened-filter');
-    if (applyFilterBtn) {
-      applyFilterBtn.classList.toggle('active-btn');
+  if (mobileFilterCloseButton) {
+    mobileFilterCloseButton.addEventListener('click', function() {
+      setMobileFilterOpen(false);
+    });
+  }
+
+  if (applyFilterBtn) {
+    applyFilterBtn.addEventListener('click', function() {
+      setMobileFilterOpen(false);
+    });
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape' && filterFormResult && filterFormResult.classList.contains('opened-filter')) {
+      setMobileFilterOpen(false);
     }
   });
-}
-
-
 
     
   if (headerContainer) {
@@ -4294,9 +4300,14 @@ function syncFilterLayout(tabId = getActiveSearchTabId()) {
 
   if (!isMobileLayout && sideFilters) {
     sideFilters.classList.remove('opened-filter');
+    document.body.classList.remove('kosher-mobile-filters-open');
 
     if (applyFilterBtn) {
       applyFilterBtn.classList.remove('active-btn');
+    }
+
+    if (filterButton) {
+      filterButton.setAttribute('aria-expanded', 'false');
     }
   }
 

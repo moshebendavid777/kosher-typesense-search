@@ -221,6 +221,9 @@ $ingredients = get_terms(array(
             <div class="close-side-filter"> 
               <span>See Results <i class="bi bi-chevron-right"></i></span>
             </div>
+            <button type="button" class="kosher-search-filter-form__mobile-filter-close" aria-label="<?php esc_attr_e('Close filters', 'kosher-typesense-search'); ?>">
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
           </div>
         </div>
 

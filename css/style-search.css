@@ -1885,6 +1885,10 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
   display: none;
 }
 
+.kosher-search-filter-form__mobile-filter-close {
+  display: none;
+}
+
 /* Results */
 .kosher-search-filter-form .pagination {
   display: flex;
@@ -2034,6 +2038,14 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
 }
 
 @media screen and (max-width: 856px) {
+  body.kosher-mobile-filters-open {
+    overflow: hidden;
+  }
+
+  .kosher-search-filter-form .recipes-filters-wrapper {
+    padding-bottom: 6rem;
+  }
+
   .kosher-search-filter-form .search-layout {
     display: block;
   }
@@ -2041,17 +2053,96 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
   .kosher-search-filter-form .search-sidebar {
     background: #fff;
     border-right: 0 !important;
-    display: none;
-    padding: 0 16px 88px !important;
-    width: 100%;
+    bottom: 0;
+    box-shadow: none;
+    display: none !important;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    left: 0;
+    max-width: none;
+    opacity: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 18px calc(132px + env(safe-area-inset-bottom)) !important;
+    position: fixed;
+    right: 0;
+    top: 0;
+    transform: none;
+    visibility: visible;
+    width: 100% !important;
+    z-index: 10000001;
   }
 
   .kosher-search-filter-form .search-sidebar.opened-filter {
-    display: flex;
+    display: flex !important;
   }
 
   .kosher-search-filter-form .close-side-filter {
-    display: block;
+    display: none;
+  }
+
+  .kosher-search-filter-form .kosher-search-filter-form-result__filter__header {
+    background: #fff;
+    margin: 0 -18px !important;
+    min-height: 64px;
+    padding: max(12px, env(safe-area-inset-top)) 18px 12px !important;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .kosher-search-filter-form .kosher-search-filter-form-result__filter__header__title {
+    font-size: 18px !important;
+  }
+
+  .kosher-search-filter-form .kosher-search-filter-form-result__filter__header-actions {
+    gap: 14px;
+  }
+
+  .kosher-search-filter-form__mobile-filter-close {
+    align-items: center;
+    background: #f5f2f5;
+    border: 0;
+    border-radius: 50%;
+    color: #29242b;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 40px;
+    font-size: 18px;
+    height: 40px;
+    justify-content: center;
+    padding: 0;
+    width: 40px;
+  }
+
+  .common__btn.btn-apply.active-btn {
+    align-items: center;
+    background: #7a147a;
+    border: 1px solid #7a147a;
+    border-radius: 10px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    box-shadow: 0 8px 24px rgba(71, 20, 71, .24);
+    color: #fff;
+    display: flex;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    gap: 8px;
+    height: 52px;
+    justify-content: center;
+    left: 16px;
+    line-height: 1;
+    max-width: none;
+    padding: 0 20px !important;
+    right: 16px;
+    width: auto;
+    z-index: 10000002;
+  }
+
+  .common__btn.btn-apply.active-btn i {
+    color: currentColor;
+    font-size: 14px;
   }
 
   .kosher-search-filter-form .search-content {
