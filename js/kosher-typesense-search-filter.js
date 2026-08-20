@@ -5585,10 +5585,8 @@ function createFilterItem(param, value, type) {
   
     // Show/Hide Clear All button based on whether there are filters
     const clearAllButton = document.querySelector('.clear-all');
-    if (hasFilters) {
-      clearAllButton.style.display = 'flex';
-    } else {
-      clearAllButton.style.display = 'none';
+    if (clearAllButton) {
+      clearAllButton.hidden = !hasFilters;
     }
   }
   

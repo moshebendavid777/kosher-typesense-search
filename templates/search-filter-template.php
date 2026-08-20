@@ -209,7 +209,15 @@ $ingredients = get_terms(array(
           <span class="kosher-search-filter-form-result__filter__header__title"><?php esc_html_e('Filters', 'kosher-typesense-search'); ?></span>
 
           <div class="kosher-search-filter-form-result__filter__header-actions">
-            <button type="button" class="clear-all" style="display:none"><?php esc_html_e('Clear All', 'kosher-typesense-search'); ?></button>
+            <button
+              type="button"
+              class="clear-all"
+              aria-label="<?php esc_attr_e('Clear all filters', 'kosher-typesense-search'); ?>"
+              hidden
+            >
+              <span><?php esc_html_e('Clear all', 'kosher-typesense-search'); ?></span>
+              <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
             <div class="close-side-filter"> 
               <span>See Results <i class="bi bi-chevron-right"></i></span>
             </div>

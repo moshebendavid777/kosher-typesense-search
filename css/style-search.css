@@ -1242,20 +1242,34 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
 }
 
 .kosher-search-filter-form-result__filter__header .clear-all {
+  align-items: center;
   background: transparent !important;
   border: 0 !important;
   border-radius: 0 !important;
-  color: var(--kosher-accent) !important;
+  color: #c00f0c !important;
+  cursor: pointer;
+  display: inline-flex;
   font-family: Inter, sans-serif;
   font-size: 13px;
   font-weight: 700;
+  gap: 6px;
+  justify-content: flex-end;
   line-height: 1;
   min-height: 0;
   padding: 0 !important;
 }
 
+.kosher-search-filter-form-result__filter__header .clear-all[hidden] {
+  display: none !important;
+}
+
+.kosher-search-filter-form-result__filter__header .clear-all i {
+  font-size: 12px;
+  line-height: 1;
+}
+
 .kosher-search-filter-form-result__filter__header .clear-all:hover {
-  color: var(--kosher-accent) !important;
+  color: #9f0c0a !important;
   text-decoration: underline;
 }
 
