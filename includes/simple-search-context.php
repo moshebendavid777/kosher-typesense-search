@@ -84,6 +84,15 @@ function kosher_typesense_simple_search_document_card($document, $index, $post_t
   $image = esc_url((string) ($document['image'] ?? ''));
   $chefs = isset($document['chefs']) ? (array) $document['chefs'] : array();
   $author = sanitize_text_field((string) ($chefs[0] ?? $document['author_name'] ?? $document['author'] ?? ''));
+  $author_url = esc_url((string) ($document['chef_url'] ?? $document['user_url'] ?? ''));
+  $cook_minutes = max(0, absint($document['cook_time'] ?? 0));
+  $cook_time = $cook_minutes >= 60
+    ? floor($cook_minutes / 60) . 'h' . ($cook_minutes % 60 ? ' ' . ($cook_minutes % 60) . 'm' : '')
+    : ($cook_minutes ? $cook_minutes . 'm' : '');
+  $difficulty_values = isset($document['difficulty']) ? (array) $document['difficulty'] : array();
+  $difficulty = sanitize_text_field((string) ($difficulty_values[0] ?? ''));
+  $likes = max(0, absint($document['likes'] ?? 0));
+  $post_id = absint($document['postID'] ?? 0);
 
   if ($title === '') {
     return '';
@@ -99,9 +108,30 @@ function kosher_typesense_simple_search_document_card($document, $index, $post_t
   $html .= $image !== ''
     ? '<img class="kayco-card__image" src="' . $image . '" alt="' . esc_attr($title) . '" loading="lazy">'
     : '<span class="kayco-card__image kayco-card__image--placeholder" aria-hidden="true"></span>';
-  $html .= '</a></div><div class="kayco-card__body">';
-  if ($author !== '') {
-    $html .= '<div class="kayco-card__meta"><span class="kayco-card__author">' . esc_html($author) . '</span></div>';
+  $html .= '</a>';
+  if ($likes || $url !== '') {
+    $html .= '<div class="kayco-card__media-actions">';
+    if ($likes) {
+      $html .= '<button type="button" class="kayco-card__like like-button" data-post="' . esc_attr($post_id) . '" aria-label="' . esc_attr($likes . ' saves') . '"><i class="bi bi-heart-fill" aria-hidden="true"></i><span class="like-count">' . esc_html($likes) . '</span></button>';
+    }
+    $html .= '<button type="button" class="kayco-card__share js-kayco-share-trigger" data-share-url="' . $url . '" data-share-title="' . esc_attr($title) . '" aria-label="' . esc_attr('Share ' . $title) . '"><i class="bi bi-share" aria-hidden="true"></i></button>';
+    $html .= '</div>';
+  }
+  if ($difficulty !== '') {
+    $html .= '<span class="kayco-card__badge kayco-card__badge--primary">' . esc_html($difficulty) . '</span>';
+  }
+  $html .= '</div><div class="kayco-card__body">';
+  if ($author !== '' || $cook_time !== '') {
+    $html .= '<div class="kayco-card__meta">';
+    if ($author !== '') {
+      $html .= $author_url !== ''
+        ? '<a href="' . $author_url . '" class="kayco-card__author">' . esc_html($author) . '</a>'
+        : '<span class="kayco-card__author">' . esc_html($author) . '</span>';
+    }
+    if ($cook_time !== '') {
+      $html .= '<span class="kayco-card__text">' . esc_html($cook_time) . '</span>';
+    }
+    $html .= '</div>';
   }
   $html .= '<h3 class="kayco-card__title"><a href="' . $url . '" title="' . esc_attr($title) . '">' . esc_html($title) . '</a></h3>';
   $html .= '</div></article></article>';
@@ -167,6 +197,10 @@ function kosher_typesense_simple_search_context_ajax()
   }
 
   $filter_clauses = array();
+  if ($post_type === 'recipes') {
+    $filter_clauses[] = 'community-recipe:=false';
+  }
+
   if ($filter_field !== '' && $filter_value !== '' && in_array($filter_field, $allowed_context_fields, true)) {
     $filter_clauses[] = $filter_field . ':=' . kosher_typesense_simple_search_filter_value($filter_value);
   }
@@ -195,7 +229,7 @@ function kosher_typesense_simple_search_context_ajax()
     'collection' => kosher_typesense_collection_name($post_type),
     'q' => $query === '' ? '*' : $query,
     'query_by' => $query_by[$post_type],
-    'include_fields' => 'postID,title,url,image,chefs,author,author_name',
+    'include_fields' => 'postID,title,url,image,chefs,author,author_name,chef_url,user_url,cook_time,difficulty,likes',
     'page' => $page,
     'per_page' => $per_page,
   );
@@ -325,7 +359,7 @@ function kosher_typesense_simple_search_results_ajax()
           'q' => '*',
           'query_by' => 'title',
           'filter_by' => 'postID:=[' . implode(',', $missing_ids) . ']',
-          'include_fields' => 'postID,title,url,image,chefs,author,author_name',
+          'include_fields' => 'postID,title,url,image,chefs,author,author_name,chef_url,user_url,cook_time,difficulty,likes',
           'per_page' => count($missing_ids),
         )),
       );

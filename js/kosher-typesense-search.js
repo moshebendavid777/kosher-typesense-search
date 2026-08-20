@@ -1,4 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.kayco-typesense-simple-search[data-post-type="recipes"]').forEach((root) => {
+    const fixedFilter = 'community-recipe:=false';
+    const existingFilter = String(root.dataset.filterBy || '').trim();
+
+    if (!/(^|\W)community-recipe\s*:/.test(existingFilter)) {
+      root.dataset.filterBy = existingFilter
+        ? `(${existingFilter}) && (${fixedFilter})`
+        : fixedFilter;
+    }
+  });
+
   const searchForms = document.querySelectorAll('.kosher-search-form'); // Select all search forms
 	  const ajaxUrl = typeSenseConfig.ajaxUrl || typeSenseConfig.ajax_url;
 	  const searchAction = typeSenseConfig.searchAction || 'kosher_typesense_search';
