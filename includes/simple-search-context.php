@@ -198,7 +198,7 @@ function kosher_typesense_simple_search_context_ajax()
 
   $filter_clauses = array();
   if ($post_type === 'recipes') {
-    $filter_clauses[] = 'community-recipe:=false';
+    $filter_clauses[] = '(community-recipe:=false || (community-recipe:=true && user_consent_public:=true))';
   }
 
   if ($filter_field !== '' && $filter_value !== '' && in_array($filter_field, $allowed_context_fields, true)) {

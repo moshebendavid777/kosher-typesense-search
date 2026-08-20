@@ -507,6 +507,23 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
   padding: 8px 10px !important;
 }
 
+/*
+ * Author matches contain an inline highlight span inserted by Tom Select.
+ * A flex option treats that span and the surrounding text as separate flex
+ * items, which adds the generic option gap inside a person's name.
+ */
+.kosher-search-filter-form #author-select-ts-dropdown .option {
+  display: block !important;
+  gap: 0 !important;
+  line-height: 1.35 !important;
+  white-space: normal !important;
+  word-spacing: normal !important;
+}
+
+.kosher-search-filter-form #author-select-ts-dropdown .option .highlight {
+  display: inline !important;
+}
+
 .kosher-search-filter-form .ts-dropdown .option input[type="checkbox"] {
   flex: 0 0 auto !important;
   height: 18px !important;

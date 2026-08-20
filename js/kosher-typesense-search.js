@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.kayco-typesense-simple-search[data-post-type="recipes"]').forEach((root) => {
-    const fixedFilter = 'community-recipe:=false';
+    const fixedFilter = '(community-recipe:=false || (community-recipe:=true && user_consent_public:=true))';
     const existingFilter = String(root.dataset.filterBy || '').trim();
 
     if (!/(^|\W)community-recipe\s*:/.test(existingFilter)) {
