@@ -282,7 +282,7 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
 }
 
 .kayco-typesense-simple-search__sidebar {
-  align-self: stretch;
+  align-self: start;
   background: #fff;
   border: 0;
   border-radius: 0;
@@ -292,6 +292,21 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
   position: sticky;
   top: 112px;
   width: 100%;
+}
+
+@media screen and (min-width: 1024px) {
+  #kayco-simple-search-sidebar-2,
+  .kayco-typesense-simple-search__sidebar {
+    align-self: start;
+    height: fit-content;
+    max-height: calc(100vh - 128px);
+    max-height: calc(100dvh - 128px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: sticky !important;
+    scrollbar-gutter: stable;
+    top: 112px;
+  }
 }
 
 .kayco-typesense-simple-search__toolbar {
@@ -2034,6 +2049,12 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
 @media screen and (max-width: 1023px) {
   .kosher-search-filter-form .search-content {
     padding: 0 24px 64px !important;
+  }
+
+  .kosher-search #menus .col-12.col-lg-4 {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
   }
 }
 
