@@ -4515,7 +4515,8 @@ const dietsSelect2 = new TomSelect('#ex-checkbox-diets-side', {
 
 
 function scrollToResultsStart() {
-  const results = document.getElementById('results');
+  const results = document.querySelector('.kosher-search-filter-form .header-tabs')
+    || document.getElementById('results');
 
   if (!results) {
     return;
