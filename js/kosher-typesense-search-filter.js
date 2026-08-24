@@ -602,12 +602,7 @@ function syncAuthorTypeCheckboxes(selectedTypes = getSelectedAuthorTypes()) {
     const correspondingNavLink = document.querySelector(`.header-tabs .nav-link[href="${targetID}"]`);
     if (correspondingNavLink) {
       correspondingNavLink.classList.add('active');
-  
-      // Smooth scroll to the corresponding nav-link
-      await new Promise((resolve) => {
-        correspondingNavLink.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(resolve, 400); // Adjust timeout as needed
-      });
+      scrollToResultsStart();
     } else {
       console.error('Corresponding nav-link not found:', targetID);
     }
@@ -2091,6 +2086,30 @@ function getTomSelectOptionLabel(selectInstance, itemId) {
   return option.name || option.text || option.value || itemId;
 }
 
+function closeRemoteSelectAfterRemoval(selectInstance) {
+  if (!selectInstance) {
+    return;
+  }
+
+  selectInstance.setTextboxValue('');
+  selectInstance.close();
+
+  if (selectInstance.control_input) {
+    selectInstance.control_input.blur();
+  }
+
+  // Tom Select refreshes its options after removeItem(). Close once more after
+  // that cycle so a stale remote query cannot reopen the dropdown.
+  window.setTimeout(() => {
+    selectInstance.setTextboxValue('');
+    selectInstance.close();
+
+    if (selectInstance.control_input) {
+      selectInstance.control_input.blur();
+    }
+  }, 0);
+}
+
 function renderRemoteSelectionPills(selectInstance, containerId) {
   const container = document.getElementById(containerId);
 
@@ -2108,8 +2127,19 @@ function renderRemoteSelectionPills(selectInstance, containerId) {
     button.classList.add('item-single');
     button.setAttribute('data-value', itemId);
     button.innerHTML = `<span>${escapeHTML(label)}</span> <i class="fa-solid fa-xmark"></i>`;
-    button.addEventListener('click', () => {
+
+    ['pointerdown', 'mousedown'].forEach((eventName) => {
+      button.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+    });
+
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       selectInstance.removeItem(itemId);
+      closeRemoteSelectAfterRemoval(selectInstance);
     });
 
     container.appendChild(button);
