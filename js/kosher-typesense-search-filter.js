@@ -4573,6 +4573,16 @@ function ensureTopPaginationContainer(suffix) {
 }
 
 function getPaginationPages(totalPages, currentPage) {
+  if (window.matchMedia('(max-width: 856px)').matches) {
+    if (totalPages <= 2) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    return currentPage >= totalPages
+      ? [totalPages - 1, totalPages]
+      : [currentPage, currentPage + 1];
+  }
+
   const pages = [];
   const firstPage = 1;
   const lastPage = totalPages;
@@ -4703,13 +4713,16 @@ function initializePagination(totalItems, perPage, currentPage = 1, suffix, onPa
     };
     const isFirstPage = currentPage <= 1;
     const isLastPage = currentPage >= totalPages;
+    const isMobilePagination = window.matchMedia('(max-width: 856px)').matches;
 
-    appendPaginationControl(pageList, {
-      html: '<i class="bi bi-chevron-double-left" aria-hidden="true"></i>',
-      label: 'Go to first page',
-      disabled: isFirstPage,
-      onClick: () => goToPage(1)
-    });
+    if (!isMobilePagination) {
+      appendPaginationControl(pageList, {
+        html: '<i class="bi bi-chevron-double-left" aria-hidden="true"></i>',
+        label: 'Go to first page',
+        disabled: isFirstPage,
+        onClick: () => goToPage(1)
+      });
+    }
 
     appendPaginationControl(pageList, {
       html: '<i class="bi bi-chevron-left" aria-hidden="true"></i>',
@@ -4761,12 +4774,14 @@ function initializePagination(totalItems, perPage, currentPage = 1, suffix, onPa
       onClick: () => goToPage(currentPage + 1)
     });
 
-    appendPaginationControl(pageList, {
-      html: '<i class="bi bi-chevron-double-right" aria-hidden="true"></i>',
-      label: 'Go to last page',
-      disabled: isLastPage,
-      onClick: () => goToPage(totalPages)
-    });
+    if (!isMobilePagination) {
+      appendPaginationControl(pageList, {
+        html: '<i class="bi bi-chevron-double-right" aria-hidden="true"></i>',
+        label: 'Go to last page',
+        disabled: isLastPage,
+        onClick: () => goToPage(totalPages)
+      });
+    }
 
     appendPaginationJumpControl(pageList, totalPages, currentPage, goToPage);
 

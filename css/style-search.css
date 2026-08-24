@@ -2067,30 +2067,22 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
   .kayco-typesense-simple-search .pagination {
     display: flex !important;
     flex-wrap: nowrap !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
     max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: visible;
     padding: 4px 2px 10px;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .kosher-search-filter-form .pagination::-webkit-scrollbar,
-  .kayco-typesense-simple-search .pagination::-webkit-scrollbar {
-    display: none;
   }
 
   .kosher-search-filter-form .pagination-list,
   .kayco-typesense-simple-search .pagination-list {
     align-items: center;
     display: flex !important;
-    flex: 0 0 max-content;
+    flex: 0 1 auto;
     flex-wrap: nowrap !important;
     gap: 6px;
-    justify-content: flex-start;
+    justify-content: center;
     margin: 0;
-    min-width: max-content;
+    min-width: 0;
     padding: 0;
     white-space: nowrap;
   }
@@ -2106,6 +2098,29 @@ body:has(.kosher-search-filter-form) .kosher-header-search {
     height: 36px;
     min-width: 36px;
     padding: 0 10px;
+  }
+
+  .kosher-search-filter-form .pagination-jump-form,
+  .kayco-typesense-simple-search .pagination-jump-form {
+    gap: 4px;
+  }
+
+  .kosher-search-filter-form .pagination-jump-form__label,
+  .kosher-search-filter-form .pagination-jump-form__total {
+    display: none;
+  }
+
+  .kosher-search-filter-form .pagination-jump-form__input,
+  .kayco-typesense-simple-search .pagination-jump-form__input {
+    height: 36px;
+    padding: 0 5px;
+    width: 48px;
+  }
+
+  .kosher-search-filter-form .pagination .pagination-jump-form__submit,
+  .kayco-typesense-simple-search .pagination .pagination-jump-form__submit {
+    min-width: 36px;
+    padding: 0 8px;
   }
 
   .kosher-search-filter-form .recipes-filters-wrapper {
